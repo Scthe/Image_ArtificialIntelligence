@@ -37,8 +37,8 @@ namespace AI_4 {
 			this.Left = 0;// desktopWorkingArea.Right - this.Width;
 			this.Top = desktopWorkingArea.Bottom - this.Height;
 
-			//drawImage("sintel_render.png", Image2);
 			setImage("sintel_render.png", IMAGE_PANEL.IP_LEFT);
+			setImage("15after.png", IMAGE_PANEL.IP_RIGHT);
 		}
 
 		private void setImage(string imgName, IMAGE_PANEL target) {
@@ -56,7 +56,6 @@ namespace AI_4 {
 
 				if (target == IMAGE_PANEL.IP_LEFT) imgLeft = bitmap;
 				else imgRight = bitmap;
-
 
 				loadImgData(path, target);
 			} else {
@@ -103,7 +102,7 @@ namespace AI_4 {
 				// and this bitmap image if really vertical in its dimensions
 				Console.WriteLine("[Warning] calculations for image size for currnet combination of dimensions not supported");
 				outH = h;
-				outW = imgH * aspectView;
+				outW = h * aspectImg;
 			} else {
 				outW = w;
 				outH = w / aspectImg;
@@ -141,7 +140,7 @@ namespace AI_4 {
 
 				double xx = keypoint.X * scaleX + baseX;
 				double yy = keypoint.Y * scaleY + baseY;
-				if (xx > w || yy > h)
+				if (xx > w+baseX || yy > h+baseY)
 					Console.WriteLine("[Error] Ellipse position error");
 
 				Ellipse e = new Ellipse();

@@ -40,9 +40,9 @@
                        Height="{Binding ElementName=DrawCanvas,Path=ActualHeight}"
                        Canvas.Left="298"
                        Canvas.Top="0"
-                       Source="data/15after.png"
                        VerticalAlignment="Top"
                        HorizontalAlignment="Left" />
+                       <!--Source="data/15after.png"-->
             </Canvas>
         </Border>
 
