@@ -94,6 +94,8 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="data\sintel_render.png.haraff.sift" />
+    <None Include="data\sintel_render.png.haraff.sift.params" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -110,6 +112,9 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="data\sintel_render.png" />
+    <Resource Include="data\sintel_render.png.haraff.sift.png" />
+    <Resource Include="data\15after.png" />
     <Content Include="MathNet.Numerics.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
