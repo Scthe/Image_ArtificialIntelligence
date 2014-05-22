@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,6 +25,9 @@ namespace AI_4.model {
 
 	class KeyPointDataBuilder {
 
+		readonly public static NumberStyles numberStyles = NumberStyles.Number;
+		readonly public static CultureInfo cultureInfo = CultureInfo.InvariantCulture;
+
 		private int nextId = 0;
 		private string name;
 		private TraitsLookupMatrix matrix;
@@ -45,9 +49,9 @@ namespace AI_4.model {
 				throw new FormatException("Could not parse ( #tokens=" + tokens.Length + "): '" + s + "'");
 
 			// parse
-			float x = int.Parse(tokens[0]),
-				y = int.Parse(tokens[1]);
-			float[] data = new float[KeyPoint.TRAITS_COUNT];
+			float x = float.Parse(tokens[0], numberStyles, cultureInfo);
+			float y = float.Parse(tokens[1], numberStyles, cultureInfo);
+			int[] data = new int[KeyPoint.TRAITS_COUNT];
 			const int startPos = 5;
 			for (int i = 0; i < KeyPoint.TRAITS_COUNT; i++) {
 				data[i] = int.Parse(tokens[startPos + i]);

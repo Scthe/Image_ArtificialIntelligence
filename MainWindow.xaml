@@ -20,12 +20,15 @@
             <Canvas x:Name="DrawCanvas"
                     Background="#FF424242">
 
+                       
                 <Image x:Name="Image1"
                        Width="295"
                        Height="{Binding ElementName=DrawCanvas,Path=ActualHeight}"
-                       Source="data/sintel_render.png"
+                       Canvas.Left="0"
+                       Canvas.Top="0"
                        VerticalAlignment="Top"
                        HorizontalAlignment="Left" />
+                       <!--Source="data/sintel_render.png"-->
 
                 <Rectangle Width="2"
                            Canvas.Left="296"
@@ -36,6 +39,7 @@
                        Width="295"
                        Height="{Binding ElementName=DrawCanvas,Path=ActualHeight}"
                        Canvas.Left="298"
+                       Canvas.Top="0"
                        Source="data/15after.png"
                        VerticalAlignment="Top"
                        HorizontalAlignment="Left" />

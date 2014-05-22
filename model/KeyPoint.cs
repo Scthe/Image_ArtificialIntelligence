@@ -12,14 +12,14 @@ namespace AI_4.model {
 		public int ID { get; private set; }
 		public float X { get; private set; }
 		public float Y { get; private set; }
-		private float[] traitVals = new float[TRAITS_COUNT];
+		private int[] traitVals = new int[TRAITS_COUNT];
 
 
 		public float this[int key] {
 			get { return traitVals[key]; }
 		}
 
-		public KeyPoint(int id, float x, float y, float[] traitVals) {
+		public KeyPoint(int id, float x, float y, int[] traitVals) {
 			if (traitVals.Length != KeyPoint.TRAITS_COUNT)
 				throw new ArgumentException("Invalid # of traits in array: provided " + traitVals.Length + " should have been " + TRAITS_COUNT);
 			this.ID = id;

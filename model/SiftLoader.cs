@@ -17,6 +17,7 @@ namespace AI_4.model {
 			// parse
 			var builder = new KeyPointDataBuilder(fileName, kpsCount);
 			for (int i = 2; i < lines.Length; i++) {
+				//Console.WriteLine("[Debug] Starting parsing line " + i);
 				builder.readKeyPoint(lines[i]);
 			}
 
