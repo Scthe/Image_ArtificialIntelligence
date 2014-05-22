@@ -15,7 +15,7 @@ namespace AI_4.model {
 		private int[] traitVals = new int[TRAITS_COUNT];
 
 
-		public float this[int key] {
+		public int this[int key] {
 			get { return traitVals[key]; }
 		}
 
@@ -34,25 +34,25 @@ namespace AI_4.model {
 
 	public class TraitsLookupMatrix {
 
-		private List<Tuple<float, int>>[] data;
+		private List<Tuple<int, int>>[] data;
 		private bool alreadyInitialized = false;
 		private int countOfKeyPoints;
 
 
 		public TraitsLookupMatrix(int countOfKeyPoints) {
-			data = new List<Tuple<float, int>>[KeyPoint.TRAITS_COUNT];
+			data = new List<Tuple<int, int>>[KeyPoint.TRAITS_COUNT];
 			for (int i = 0; i < KeyPoint.TRAITS_COUNT; i++) {
-				data[i] = new List<Tuple<float, int>>(countOfKeyPoints);
+				data[i] = new List<Tuple<int, int>>(countOfKeyPoints);
 			}
 			this.countOfKeyPoints = countOfKeyPoints;
 		}
 
-		public void set(int keyPointID, int traitId, float traitVal) {
+		public void set(int keyPointID, int traitId, int traitVal) {
 			if (alreadyInitialized)
 				throw new InvalidOperationException("Tried to add after TraitsLookupMatrix was initialized ( closed for modification)");
 
 			var arrForTrait = data[traitId];
-			arrForTrait.Add(new Tuple<float, int>(traitVal, keyPointID));
+			arrForTrait.Add(new Tuple<int, int>(traitVal, keyPointID));
 		}
 
 		/// <summary>
@@ -62,11 +62,11 @@ namespace AI_4.model {
 			if (alreadyInitialized) return;
 			// sort
 			for (int i = 0; i < KeyPoint.TRAITS_COUNT; i++) {
-				List<Tuple<float, int>> arrForTrait = data[i];
+				List<Tuple<int, int>> arrForTrait = data[i];
 				if (arrForTrait.Count != countOfKeyPoints)
 					throw new RankException("List of keypoints for trait #" + i + " has length of " + arrForTrait.Count + " as opposed to " + this.countOfKeyPoints);
 
-				arrForTrait.Sort(delegate(Tuple<float, int> t1, Tuple<float, int> t2) {
+				arrForTrait.Sort(delegate(Tuple<int, int> t1, Tuple<int, int> t2) {
 					return t1.Item1.CompareTo(t2.Item1); // sort by trait value
 				});
 
@@ -82,12 +82,14 @@ namespace AI_4.model {
 		/// Returns id of the KeyPoint that has the closest value for provided trait
 		/// </summary>
 		/// <returns>int as id</returns>
-		public int findClosest(int traitId, float traitVal) {
+		public int findClosest(int traitId, int traitVal) {
 			// binary search
 			var arrForTrait = data[traitId];
-			int pos = arrForTrait.BinarySearch(new Tuple<float, int>(traitVal, -1));
-			if (pos < 0) pos = ~pos;
-			return arrForTrait[pos].Item2;
+			int pos = arrForTrait.BinarySearch(new Tuple<int, int>(traitVal, -1));
+			//if (pos < 0) pos = ~pos;
+			var posOk = pos < 0 ? ~pos : pos;
+			posOk = Math.Max(0, Math.Min(posOk, arrForTrait.Count - 1));
+			return arrForTrait[posOk].Item2;
 		}
 	}
 	#endregion
