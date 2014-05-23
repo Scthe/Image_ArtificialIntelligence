@@ -47,6 +47,7 @@ namespace AI_4 {
 		private model.ImageData dataRight;
 		private BitmapImage imgLeft; // TODO use Image.SourceRect ?
 		private BitmapImage imgRight;
+		private List<Tuple<int, int>> pairs;
 
 		public MainWindow() {
 			InitializeComponent();
@@ -62,18 +63,17 @@ namespace AI_4 {
 
 			setImage("sintel_render.png", IMAGE_PANEL.IP_LEFT);
 			setImage("15after.png", IMAGE_PANEL.IP_RIGHT);
-			//setImage("TheRoad1.png", IMAGE_PANEL.IP_LEFT);
-			//setImage("TheRoad2.png", IMAGE_PANEL.IP_RIGHT);
 
+			/*
 			if (dataLeft != null && dataRight != null) {
 				var matcher = new NeighbourPointsMatcher();
 				var ai1 = new A1_NeighbourhoodCompactnessAnalysis();
 				var ransac = new A2_RANSAC();
 
 				try {
-					var pairs = matcher.match(dataLeft, dataRight);
+					pairs = matcher.match(dataLeft, dataRight);
 					Console.WriteLine("[Info] Found " + pairs.Count + " pairs");
-					showNeighbourConnectionLines(pairs);
+					//showNeighbourConnectionLines(pairs);
 
 					//var pairs2 =ai1.reduce(pairs, dataLeft, dataRight);
 					//Console.WriteLine("[Info] Reduced to " + pairs2.Count + " pairs");
@@ -89,11 +89,14 @@ namespace AI_4 {
 			} else {
 				Console.WriteLine("[Error] Could not analize images, data for either image left or image right was not read");
 			}
-
+			*/
 		}
 
 		private void setImage(string imgName, IMAGE_PANEL target) {
 			//http://stackoverflow.com/questions/12866758/placing-bitmap-in-canvas-in-c-sharp
+
+			removeKeypoints(target);
+			removeNeighbours();
 
 			Image img = target == IMAGE_PANEL.IP_LEFT ? Image1 : Image2;
 			var path = dataDir + imgName;
@@ -109,6 +112,17 @@ namespace AI_4 {
 				else imgRight = bitmap;
 
 				loadImgData(path, target);
+
+				// update neighbours
+				if (dataLeft != null && dataRight != null) {
+					var matcher = new NeighbourPointsMatcher();
+					try {
+						pairs = matcher.match(dataLeft, dataRight);
+						Console.WriteLine("[Info] Found " + pairs.Count + " pairs");
+					} catch (Exception ex) {
+						Console.WriteLine("[Error] NeighbourPointsMatcher: " + ex.Message);
+					}
+				}
 			} else {
 				Console.WriteLine("[Error] Could not find '" + imgName + "'\n\tSearched in: '" + path + "'");
 			}
@@ -117,6 +131,8 @@ namespace AI_4 {
 		#region controller
 
 		private void loadImgData(string fullImagePath, IMAGE_PANEL target) {
+			if (target == IMAGE_PANEL.IP_LEFT) { dataLeft = null; } else { dataRight = null; }
+
 			var path = fullImagePath + ".haraff.sift";
 			if (File.Exists(path)) {
 				try {
@@ -126,7 +142,6 @@ namespace AI_4 {
 					if (target == IMAGE_PANEL.IP_LEFT) dataLeft = imgData;
 					else dataRight = imgData;
 
-					showKeypoints(target);
 					Console.WriteLine("[Info] HARAFF SIFT parse success: " + imgData.Keypoints.Count + " keypoints");
 				} catch (Exception e) {
 					Console.WriteLine("[Error] Loading HARAFF SIFT error: " + e.Message + "\n\tFile: '" + path + "'");
@@ -218,7 +233,7 @@ namespace AI_4 {
 				//if (xx > w + baseX || yy > h + baseY)
 				//Console.WriteLine("[Error] Ellipse position error");
 
-				Ellipse e = new Ellipse();
+				Ellipse e = new Ellipse() { Uid = "kp" + target.ToString() };
 				e.SetValue(Canvas.LeftProperty, xx - radius);
 				e.SetValue(Canvas.TopProperty, yy - radius);
 				e.Width = radius * 2;
@@ -228,7 +243,10 @@ namespace AI_4 {
 			}
 		}
 
-		private void showNeighbourConnectionLines(List<Tuple<int, int>> pairs) {
+		private void showNeighbourConnectionLines() {
+			if (pairs == null)
+				Console.WriteLine("[Error] Could not display neighbours - list is not valid");
+
 			Console.WriteLine("[Debug] Displaying " + pairs.Count + " pairs");
 			var kp1 = dataLeft.Keypoints;
 			var kp2 = dataRight.Keypoints;
@@ -248,7 +266,7 @@ namespace AI_4 {
 				var kpA = kp1[idA];
 				var kpB = kp2[idB];
 
-				var line = new Line();
+				var line = new Line() { Uid = "Line" + idA };
 				line.Stroke = new SolidColorBrush(Color.FromArgb(32, 255, 255, 0));
 				line.X1 = kpA.X * scaleX_1 + baseX_1;
 				line.Y1 = kpA.Y * scaleY_1 + baseY_1;
@@ -257,10 +275,6 @@ namespace AI_4 {
 				line.StrokeThickness = 1;
 				DrawCanvas.Children.Add(line);
 			}
-		}
-
-		private void displayRansacResult(RANSAC_RESULT res) {
-
 		}
 
 		#endregion display data on the images
@@ -275,7 +289,9 @@ namespace AI_4 {
 					ComboBox_Left = value;
 					//OnPropertyChanged("SelectedClass");
 					//OnPropertyChanged();
-					Console.WriteLine(IMAGE_PANEL.IP_LEFT.ToString() + ">" + value.ToString());
+					Console.WriteLine(IMAGE_PANEL.IP_LEFT.ToString() + " > " + value.ToString());
+					var path = EnumHelper.Description(value);
+					setImage(path, IMAGE_PANEL.IP_LEFT);
 				}
 			}
 		}
@@ -286,8 +302,56 @@ namespace AI_4 {
 					ComboBox_Right = value;
 					//OnPropertyChanged("SelectedClass");
 					//OnPropertyChanged();
-					Console.WriteLine(IMAGE_PANEL.IP_RIGHT.ToString() + ">" + value.ToString());
+					Console.WriteLine(IMAGE_PANEL.IP_RIGHT.ToString() + " > " + value.ToString());
+					var path = EnumHelper.Description(value);
+					setImage(path, IMAGE_PANEL.IP_RIGHT);
 				}
+			}
+		}
+
+		private void Keypoints_Changed(object sender, RoutedEventArgs e) {
+			var chBox = sender as CheckBox;
+			var target = chBox.Name.Equals(KeypointsLeft.Name) ? IMAGE_PANEL.IP_LEFT : IMAGE_PANEL.IP_RIGHT;
+
+			if (chBox.IsChecked ?? false) {
+				showKeypoints(target);
+			} else {
+				// remove all keypoints
+				removeKeypoints(target);
+			}
+		}
+
+		private void Neighbours_Changed(object sender, RoutedEventArgs e) {
+			var chBox = sender as CheckBox;
+			if (chBox.IsChecked ?? false) {
+				showNeighbourConnectionLines();
+			} else {
+				// remove lines
+				removeNeighbours();
+			}
+		}
+
+		private void removeNeighbours() {
+			List<UIElement> itemstoremove = new List<UIElement>();
+			foreach (UIElement ui in DrawCanvas.Children) {
+				if (ui.Uid.StartsWith("Line")) {
+					itemstoremove.Add(ui);
+				}
+			}
+			foreach (UIElement ui in itemstoremove) {
+				DrawCanvas.Children.Remove(ui);
+			}
+		}
+
+		private void removeKeypoints(IMAGE_PANEL target) {
+			List<UIElement> itemstoremove = new List<UIElement>();
+			foreach (UIElement ui in DrawCanvas.Children) {
+				if (ui.Uid.StartsWith("kp") && ui.Uid.EndsWith(target.ToString())) {
+					itemstoremove.Add(ui);
+				}
+			}
+			foreach (UIElement ui in itemstoremove) {
+				DrawCanvas.Children.Remove(ui);
 			}
 		}
 
@@ -325,6 +389,7 @@ namespace AI_4 {
 	}
 
 	public static class EnumHelper {
+		// http://stackoverflow.com/questions/6145888/how-to-bind-an-enum-to-a-combobox-control-in-wpf
 
 		/// <summary>
 		/// Gets the description of a specific enum value.

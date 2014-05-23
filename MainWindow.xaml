@@ -138,21 +138,27 @@
                 <CheckBox x:Name="KeypointsLeft"
                           Grid.Column="1"
                           Grid.Row="4"
-                          VerticalAlignment="Center" />
+                          VerticalAlignment="Center"
+                          Checked="Keypoints_Changed"
+                          Unchecked="Keypoints_Changed"/>
                 <CheckBox x:Name="KeypointsRight"
                           Grid.Column="1"
                           Grid.Row="5"
-                          VerticalAlignment="Center" />
+                          VerticalAlignment="Center"
+                          Checked="Keypoints_Changed"
+                          Unchecked="Keypoints_Changed"/>
                 <CheckBox x:Name="Neighbours"
                           Grid.Column="1"
                           Grid.Row="6"
-                          VerticalAlignment="Center" />
+                          VerticalAlignment="Center" 
+                           Checked="Neighbours_Changed"
+                          Unchecked="Neighbours_Changed"/>
     </Grid>
     </TreeViewItem>
 
     <!---->
                 <!--Closeness filter-->
-    <!---->
+                <!---->
                 <TreeViewItem IsExpanded="False">
                     <TreeViewItem.Header>
                         <Border BorderThickness="0 0 0 1"
@@ -197,8 +203,8 @@
                 </TreeViewItem>
 
                  <!---->
-    <!--Ransac-->
-    <!---->
+                <!--Ransac-->
+                <!---->
                 <TreeViewItem IsExpanded="False">
                     <TreeViewItem.Header>
                         <Border BorderThickness="0 0 0 1"
