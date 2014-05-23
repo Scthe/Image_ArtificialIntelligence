@@ -38,8 +38,10 @@ namespace AI_4 {
 			this.Left = 0;// desktopWorkingArea.Right - this.Width;
 			this.Top = desktopWorkingArea.Bottom - this.Height;
 
-			setImage("sintel_render.png", IMAGE_PANEL.IP_LEFT);
-			setImage("15after.png", IMAGE_PANEL.IP_RIGHT);
+			//setImage("sintel_render.png", IMAGE_PANEL.IP_LEFT);
+			//setImage("15after.png", IMAGE_PANEL.IP_RIGHT);
+			setImage("TheRoad1.png", IMAGE_PANEL.IP_LEFT);
+			setImage("TheRoad2.png", IMAGE_PANEL.IP_RIGHT);
 
 			if (dataLeft != null && dataRight != null) {
 				var matcher = new NeighbourPointsMatcher();
@@ -55,7 +57,7 @@ namespace AI_4 {
 					//Console.WriteLine("[Info] Reduced to " + pairs2.Count + " pairs");
 					//showNeighbourConnectionLines(pairs2);
 
-					var ransacMatrix = ransac.reduce(pairs, dataLeft, dataRight);
+					//var ransacMatrix = ransac.reduce(pairs, dataLeft, dataRight);
 					//displayRansacResult(ransacMatrix);
 
 
