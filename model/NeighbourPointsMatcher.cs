@@ -46,18 +46,18 @@ namespace AI_4.model {
 				KeyPoint keyPoint = img1KPs[keyPoint1_i];
 				int bestId = 0, bestIdFreq = 0;
 				for (int i = 0; i < KeyPoint.TRAITS_COUNT; i++) {
-					// get closest keypoint from alien image in respect to cecha
-					int cechaVal = keyPoint[i];
-					int otherImgClosestPointIDForCecha = img2lookup.findClosest(i, cechaVal);
+					// get closest keypoint from alien image in respect to the trait
+					int traitVal = keyPoint[i];
+					int otherImgClosestPointIDForTrait = img2lookup.findClosest(i, traitVal);
 					// look up how many times this alien keyPoint happened before
 					int currentFreq;
-					bool alreadyExists = freqForOtherKeypoint.TryGetValue(otherImgClosestPointIDForCecha, out currentFreq);
+					bool alreadyExists = freqForOtherKeypoint.TryGetValue(otherImgClosestPointIDForTrait, out currentFreq);
 					if (!alreadyExists)
 						currentFreq = 1;
 					// increase alien key frequency, set as best if necessary
-					freqForOtherKeypoint[otherImgClosestPointIDForCecha] = currentFreq;
+					freqForOtherKeypoint[otherImgClosestPointIDForTrait] = currentFreq;
 					if (currentFreq > bestIdFreq) {
-						bestIdFreq = currentFreq; bestId = otherImgClosestPointIDForCecha;
+						bestIdFreq = currentFreq; bestId = otherImgClosestPointIDForTrait;
 					}
 				}
 				res[keyPoint1_i] = bestId;

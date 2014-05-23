@@ -11,8 +11,8 @@ namespace AI_4.model {
 		public int N { set; private get; } // neighbourhood size
 
 		public A1_NeighbourhoodCompactnessAnalysis() {
-			RequiredMinPercentage = 0.49f;
-			N = 400;
+			RequiredMinPercentage = 10f;
+			N = 4;
 		}
 
 
@@ -21,20 +21,25 @@ namespace AI_4.model {
 			var ks1 = img1.Keypoints;
 			var ks2 = img2.Keypoints;
 
-			foreach (var pair in pairs) {
+			//foreach (var pair in pairs) {
+			for (int i = 0; i < pairs.Count; i++) {
+				var pair = pairs[i];
+
 				var neighboursOf_1 = getClosestToKeyPoint(pair.Item1, ks1);
 				var neighboursOf_2 = getClosestToKeyPoint(pair.Item2, ks2);
 				int neighboursClose = 0;
 				foreach (int idA in neighboursOf_1) {
-					// get pair for this keyPoint
-					Tuple<int, int> currentPair = pairs.First((p) => p.Item1 == idA);
-					int idB = currentPair.Item2;
-					if (neighboursOf_2.Contains(idB)) {
-						// match !
-						++neighboursClose;
+					// get pair for this keyPoint ( it is not guaranteed that the closes point does in fact have a pair)
+					Tuple<int, int> currentPair = pairs.FirstOrDefault((p) => p.Item1 == idA);
+					if (currentPair != null) {
+						int idB = currentPair.Item2;
+						if (neighboursOf_2.Contains(idB)) {
+							// match !
+							++neighboursClose;
+						}
 					}
 				}
-				if (neighboursClose / N >= this.RequiredMinPercentage)
+				if (neighboursClose*100.0f / N >= this.RequiredMinPercentage)
 					result.Add(pair);
 			}
 

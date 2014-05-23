@@ -36,18 +36,21 @@ namespace AI_4.model {
 			RANSAC_RESULT bestModel = null;
 			double bestScore = double.MinValue;
 			for (int i = 0; i < IterCount; i++) {
-				RANSAC_RESULT model = createModel(pairs, ks1, ks2);
+				//Console.WriteLine("[Debug] ransac iter: " + i);
+				RANSAC_RESULT model = createModelNonOptimized(pairs, ks1, ks2);
 
 				// iterate over all points and calculate respective error
 				double score = 0;
-				foreach (var kpA in ks1) {
+				foreach (var pair in pairs) {
+					var kpA = ks1[pair.Item1];
+					var kpB = ks2[pair.Item2];
 					double expectedX, expectedY;
 					apply(kpA.X, kpA.Y, model, out expectedX, out expectedY);
-					KeyPoint kpB = getPairedKeypoint(kpA, pairs, ks2);
 					if (errorMetric(expectedX, expectedY, kpB.X, kpB.Y) < MaxError)
 						score += 1;
 				}
 
+				Console.WriteLine("[Debug] ransac iter: " + i+" score "+score+" /"+pairs.Count);
 				// score
 				if (score > bestScore) {
 					bestScore = score;
@@ -64,10 +67,10 @@ namespace AI_4.model {
 		/// Keypoint that is paired with the provided pointSrc
 		/// </summary>
 		/// <returns>Should always return resulte</returns>
-		private static KeyPoint getPairedKeypoint(KeyPoint pointSrc, List<Tuple<int, int>> pairs, List<KeyPoint> pointsDst) {
-			Tuple<int, int> currentPair = pairs.First((p) => p.Item1 == pointSrc.ID);
-			return pointsDst[currentPair.Item2];
-		}
+		//private static KeyPoint getPairedKeypoint(KeyPoint pointSrc, List<Tuple<int, int>> pairs, List<KeyPoint> pointsDst) {
+		//Tuple<int, int> currentPair = pairs.FirstOrDefault((p) => p.Item1 == pointSrc.ID);
+		//return currentPair == null ? null : pointsDst[currentPair.Item2];
+		//}
 
 		private static double errorMetric(double x1, double y1, double x2, double y2) {
 			return Math.Sqrt(Math.Pow(x1 - x2, 2) + Math.Pow(y1 - y2, 2));
@@ -85,13 +88,35 @@ namespace AI_4.model {
 			Random rnd = new Random();
 			RANSAC_RESULT model = new RANSAC_RESULT();
 			do {
-				model.kp1[0] = l1[rnd.Next(l1.Count)];
-				model.kp1[1] = l1[rnd.Next(l1.Count)];
-				model.kp1[2] = l1[rnd.Next(l1.Count)];
-				model.kp2[0] = getPairedKeypoint(model.kp1[0], pairs, l2);
-				model.kp2[1] = getPairedKeypoint(model.kp1[1], pairs, l2);
-				model.kp2[2] = getPairedKeypoint(model.kp1[2], pairs, l2);
+				var p1 = pairs[rnd.Next(pairs.Count)];
+				var p2 = pairs[rnd.Next(pairs.Count)];
+				var p3 = pairs[rnd.Next(pairs.Count)];
+				model.kp1[0] = l1[p1.Item1];
+				model.kp1[1] = l1[p2.Item1];
+				model.kp1[2] = l1[p3.Item1];
+				model.kp2[0] = l2[p1.Item2];
+				model.kp2[1] = l2[p2.Item2];
+				model.kp2[2] = l2[p3.Item2];
 			} while (!checkModelConstraints(model));
+			model.matrix = createAffinicMatrix(l1, l2, model);
+			return model;
+		}
+
+		private RANSAC_RESULT createModelNonOptimized(List<Tuple<int, int>> pairs, List<KeyPoint> l1, List<KeyPoint> l2) {
+			Random rnd = new Random();
+			RANSAC_RESULT model = new RANSAC_RESULT();
+			var p1 = pairs[rnd.Next(pairs.Count)];
+			model.kp1[0] = l1[p1.Item1];
+			model.kp2[0] = l2[p1.Item2];
+			do {
+				var p2 = pairs[rnd.Next(pairs.Count)];
+				var p3 = pairs[rnd.Next(pairs.Count)];
+				model.kp1[1] = l1[p2.Item1];
+				model.kp1[2] = l1[p3.Item1];
+				model.kp2[1] = l2[p2.Item2];
+				model.kp2[2] = l2[p3.Item2];
+			} while (model.kp1[2] == model.kp1[0] || model.kp1[1] == model.kp1[0] || model.kp1[2] == model.kp1[1]
+				|| model.kp2[2] == model.kp2[0] || model.kp2[1] == model.kp2[0] || model.kp2[2] == model.kp2[1]);
 			model.matrix = createAffinicMatrix(l1, l2, model);
 			return model;
 		}
@@ -138,13 +163,13 @@ namespace AI_4.model {
 			float x2 = model.kp1[1].X;
 			float y2 = model.kp1[1].Y;
 			float x3 = model.kp1[2].X;
-			float y3 = model.kp1[3].Y;
+			float y3 = model.kp1[2].Y;
 			float u1 = model.kp2[0].X;
 			float v1 = model.kp2[0].Y;
 			float u2 = model.kp2[1].X;
 			float v2 = model.kp2[1].Y;
 			float u3 = model.kp2[2].X;
-			float v3 = model.kp2[3].Y;
+			float v3 = model.kp2[2].Y;
 
 			// http://numerics.mathdotnet.com/docs/
 			Matrix<double> mat = DenseMatrix.OfArray(new double[,] {
@@ -178,6 +203,21 @@ namespace AI_4.model {
 		{1,2,3,4},
 		{4,3,2,1}});
 	Vector<double>[] nullspace = A.Kernel();
+
+	model.kp1[0] = l1[rnd.Next(l1.Count)];
+	model.kp1[1] = l1[rnd.Next(l1.Count)];
+	model.kp1[2] = l1[rnd.Next(l1.Count)];
+	model.kp2[0] = getPairedKeypoint(model.kp1[0], pairs, l2);
+	model.kp2[1] = getPairedKeypoint(model.kp1[1], pairs, l2);
+	model.kp2[2] = getPairedKeypoint(model.kp1[2], pairs, l2);
+	 
+	foreach (var kpA in ks1) {
+		double expectedX, expectedY;
+		apply(kpA.X, kpA.Y, model, out expectedX, out expectedY);
+		KeyPoint kpB = getPairedKeypoint(kpA, pairs, ks2);
+		if (errorMetric(expectedX, expectedY, kpB.X, kpB.Y) < MaxError)
+			score += 1;
+	}
 
 	KeyPoint k11 = kp1.First((p) => p.ID == t1.Item1);
 	KeyPoint k12 = kp1.First((p) => p.ID == t2.Item1);

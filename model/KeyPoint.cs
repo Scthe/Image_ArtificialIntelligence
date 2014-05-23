@@ -86,7 +86,7 @@ namespace AI_4.model {
 			// binary search
 			var arrForTrait = data[traitId];
 			int pos = arrForTrait.BinarySearch(new Tuple<int, int>(traitVal, -1));
-			//if (pos < 0) pos = ~pos;
+			// TODO ATM it only matches 1 id. Should match range ! Decrease the found index and iterate till trait>traitVal || reachedEnd
 			var posOk = pos < 0 ? ~pos : pos;
 			posOk = Math.Max(0, Math.Min(posOk, arrForTrait.Count - 1));
 			return arrForTrait[posOk].Item2;

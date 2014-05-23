@@ -43,10 +43,22 @@ namespace AI_4 {
 
 			if (dataLeft != null && dataRight != null) {
 				var matcher = new NeighbourPointsMatcher();
+				var ai1 = new A1_NeighbourhoodCompactnessAnalysis();
+				var ransac = new A2_RANSAC();
+
 				try {
 					var pairs = matcher.match(dataLeft, dataRight);
 					Console.WriteLine("[Info] Found " + pairs.Count + " pairs");
-					showNeighbourConnectionLines(pairs);
+					//showNeighbourConnectionLines(pairs);
+
+					//var pairs2 =ai1.reduce(pairs, dataLeft, dataRight);
+					//Console.WriteLine("[Info] Reduced to " + pairs2.Count + " pairs");
+					//showNeighbourConnectionLines(pairs2);
+
+					var ransacMatrix = ransac.reduce(pairs, dataLeft, dataRight);
+					//displayRansacResult(ransacMatrix);
+
+
 				} catch (Exception ex) {
 					Console.WriteLine("[Error] NeighbourPointsMatcher: " + ex.Message);
 				}
@@ -193,6 +205,7 @@ namespace AI_4 {
 		}
 
 		private void showNeighbourConnectionLines(List<Tuple<int, int>> pairs) {
+			Console.WriteLine("[Debug] Displaying " + pairs.Count + " pairs");
 			var kp1 = dataLeft.Keypoints;
 			var kp2 = dataRight.Keypoints;
 
@@ -202,9 +215,9 @@ namespace AI_4 {
 			getDrawTransformation(IMAGE_PANEL.IP_LEFT, out baseX_1, out baseY_1, out scaleX_1, out scaleY_1);
 			getDrawTransformation(IMAGE_PANEL.IP_RIGHT, out baseX_2, out baseY_2, out scaleX_2, out scaleY_2);
 
-			//foreach (var idPair in pairs) {
-			for (int i = 0; i < 5; i++) {
-				var idPair = pairs[i];
+			foreach (var idPair in pairs) {
+			//for (int i = 0; i < 5; i++) {
+				//var idPair = pairs[i];
 
 				var idA = idPair.Item1;
 				var idB = idPair.Item2;
@@ -220,6 +233,10 @@ namespace AI_4 {
 				line.StrokeThickness = 1;
 				DrawCanvas.Children.Add(line);
 			}
+		}
+
+		private void displayRansacResult(RANSAC_RESULT res) {
+
 		}
 
 		#endregion display data on the images
