@@ -106,25 +106,22 @@
                                ToolTip="Show keypoints for right image"
                                Foreground="{DynamicResource PropertiesColor}"
                                Grid.Row="2" />
-                        <!--
-                        <TextBox x:Name="ImagePath1"
-                                 Grid.Row="1"
-                                 Grid.ColumnSpan="2" TextAlignment="Right" />
-                        <TextBox x:Name="ImagePath2"
-                                 Grid.Row="3"
-                                 Grid.ColumnSpan="2" TextAlignment="Right" />
-                        
-                        
-                          ItemsSource="{Binding Path=ImagePaths}"
-                          DisplayMemberPath="ValueString"
-                          SelectedValuePath="ValueString"
-                          SelectedValue="{Binding ColorString}"
-                        -->
 
                 <ComboBox x:Name="ImagePath1"
                           Grid.Row="1"
-                          Grid.ColumnSpan="2" />
-
+                          Grid.ColumnSpan="2"
+                          ItemsSource="{Binding ImagesList, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type l:MainWindow}}}"
+                          SelectedValuePath="Value"
+                          DisplayMemberPath="Description"
+                          SelectedValue="{Binding ComboBoxLeftSelected, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type l:MainWindow}}}" />
+                <ComboBox x:Name="ImagePath2"
+                          Grid.Row="3"
+                          Grid.ColumnSpan="2"
+                          ItemsSource="{Binding ImagesList, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type l:MainWindow}}}"
+                          SelectedValuePath="Value"
+                          DisplayMemberPath="Description"
+                          SelectedValue="{Binding ComboBoxRightSelected, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type l:MainWindow}}}" />
+                        
                 <Label Content="Keypoints left"
                        ToolTip="Show keypoints for left image"
                        Grid.Row="4"
@@ -156,7 +153,7 @@
     <!---->
                 <!--Closeness filter-->
     <!---->
-                <TreeViewItem IsExpanded="True">
+                <TreeViewItem IsExpanded="False">
                     <TreeViewItem.Header>
                         <Border BorderThickness="0 0 0 1"
                                 BorderBrush="{DynamicResource PropertyGroupBorderColor}"
@@ -202,7 +199,7 @@
                  <!---->
     <!--Ransac-->
     <!---->
-                <TreeViewItem IsExpanded="True">
+                <TreeViewItem IsExpanded="False">
                     <TreeViewItem.Header>
                         <Border BorderThickness="0 0 0 1"
                                 BorderBrush="{DynamicResource PropertyGroupBorderColor}"

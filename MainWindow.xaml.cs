@@ -9,18 +9,38 @@ using System.Windows.Media;
 using System.Collections.Generic;
 using System.Windows.Data;
 using System.Globalization;
+using System.ComponentModel;
+using System.Linq;
 
 namespace AI_4 {
+
+	public enum IMAGES_ENUM {
+		[Description(" ")]
+		None,
+		[Description("15after.png")]
+		Sintel1,
+		[Description("sintel_render.png")]
+		Sintel2,
+		[Description("TheRoad1.png")]
+		TheRoad1,
+		[Description("TheRoad2.png")]
+		TheRoad2
+	}
 
 	/// <summary>
 	/// Interaction logic for MainWindow.xaml
 	/// </summary>
 	public partial class MainWindow : Window {
-		/*
-		 canvas contains children - remove children of type lines etc.
-		 */
 
 		private enum IMAGE_PANEL { IP_LEFT, IP_RIGHT }
+
+		public IEnumerable<ValueDescription> ImagesList {
+			get {
+				return EnumHelper.GetAllValuesAndDescriptions<IMAGES_ENUM>();
+			}
+		}
+		private IMAGES_ENUM ComboBox_Left;
+		private IMAGES_ENUM ComboBox_Right;
 
 		private readonly string dataDir;
 		private model.ImageData dataLeft;
@@ -107,7 +127,7 @@ namespace AI_4 {
 					else dataRight = imgData;
 
 					showKeypoints(target);
-					Console.WriteLine("[Info] HARAFF SIFT parse success: "+imgData.Keypoints.Count+" keypoints");
+					Console.WriteLine("[Info] HARAFF SIFT parse success: " + imgData.Keypoints.Count + " keypoints");
 				} catch (Exception e) {
 					Console.WriteLine("[Error] Loading HARAFF SIFT error: " + e.Message + "\n\tFile: '" + path + "'");
 				}
@@ -220,7 +240,7 @@ namespace AI_4 {
 			getDrawTransformation(IMAGE_PANEL.IP_RIGHT, out baseX_2, out baseY_2, out scaleX_2, out scaleY_2);
 
 			foreach (var idPair in pairs) {
-			//for (int i = 0; i < 5; i++) {
+				//for (int i = 0; i < 5; i++) {
 				//var idPair = pairs[i];
 
 				var idA = idPair.Item1;
@@ -244,10 +264,38 @@ namespace AI_4 {
 		}
 
 		#endregion display data on the images
+
+
+		#region listeners
+
+		public IMAGES_ENUM ComboBoxLeftSelected {
+			get { return ComboBox_Left; }
+			set {
+				if (ComboBox_Left != value) {
+					ComboBox_Left = value;
+					//OnPropertyChanged("SelectedClass");
+					//OnPropertyChanged();
+					Console.WriteLine(IMAGE_PANEL.IP_LEFT.ToString() + ">" + value.ToString());
+				}
+			}
+		}
+		public IMAGES_ENUM ComboBoxRightSelected {
+			get { return ComboBox_Right; }
+			set {
+				if (ComboBox_Right != value) {
+					ComboBox_Right = value;
+					//OnPropertyChanged("SelectedClass");
+					//OnPropertyChanged();
+					Console.WriteLine(IMAGE_PANEL.IP_RIGHT.ToString() + ">" + value.ToString());
+				}
+			}
+		}
+
+		#endregion
 	}
 
 
-
+	#region utils other
 
 	public class HalfValueConverter : IValueConverter {
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
@@ -258,13 +306,51 @@ namespace AI_4 {
 			return (((double)value) + 1) * 2;
 		}
 	}
+
 	public class HalfValuePlus2Converter : IValueConverter {
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
-			return ((double)value) / 2 +1;
+			return ((double)value) / 2 + 1;
 		}
 
 		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
-			return (((double)value) + 1) +1;
+			return (((double)value) + 1) + 1;
 		}
 	}
+
+
+	public class ValueDescription {
+		//public MainWindow.IMAGES_ENUM Value { get; set; }
+		public System.Enum Value { get; set; }
+		public string Description { get; set; }
+	}
+
+	public static class EnumHelper {
+
+		/// <summary>
+		/// Gets the description of a specific enum value.
+		/// </summary>
+		public static string Description(this Enum eValue) {
+			var nAttributes = eValue.GetType().GetField(eValue.ToString()).GetCustomAttributes(typeof(DescriptionAttribute), false);
+
+			if (!nAttributes.Any()) {
+				TextInfo oTI = CultureInfo.CurrentCulture.TextInfo;
+				return oTI.ToTitleCase(oTI.ToLower(eValue.ToString().Replace("_", " ")));
+			}
+
+			return (nAttributes.First() as DescriptionAttribute).Description;
+		}
+
+		/// <summary>
+		/// Returns an enumerable collection of all values and descriptions for an enum type.
+		/// </summary>
+		public static IEnumerable<ValueDescription> GetAllValuesAndDescriptions<TEnum>() where TEnum : struct, IConvertible, IComparable, IFormattable {
+			if (!typeof(TEnum).IsEnum)
+				throw new ArgumentException("TEnum must be an Enumeration type");
+
+			return from e in Enum.GetValues(typeof(TEnum)).Cast<Enum>()
+				   select new ValueDescription() { Value = e, Description = e.Description() };
+		}
+	}
+
+	#endregion
 }
