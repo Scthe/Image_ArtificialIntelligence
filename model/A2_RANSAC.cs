@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 using MathNet.Numerics.LinearAlgebra.Double;
 using MathNet.Numerics.LinearAlgebra.Generic;
@@ -50,7 +49,7 @@ namespace AI_4.model {
 						score += 1;
 				}
 
-				Console.WriteLine("[Debug] ransac iter: " + i+" score "+score+" /"+pairs.Count);
+				Console.WriteLine("[Debug] ransac iter: " + i + " score " + score + " /" + pairs.Count);
 				// score
 				if (score > bestScore) {
 					bestScore = score;
@@ -238,4 +237,5 @@ namespace AI_4.model {
 	float u3 = k23.X;
 	float v3 = k23.Y;
 	*/
+
 }

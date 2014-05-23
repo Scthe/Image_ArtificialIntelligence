@@ -1,60 +1,270 @@
 ﻿<Window x:Class="AI_4.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="clr-namespace:AI_4"
         Title="MainWindow"
-        Height="450"
-        Width="602"
-        Loaded="Window_Loaded"
-        ResizeMode="NoResize">
+        Height="550"
+        Width="720"
+        Loaded="Window_Loaded">
+    <Window.Resources>
+        <l:HalfValueConverter x:Key="HalfValueConverter" />
+        <l:HalfValuePlus2Converter x:Key="HalfValuePlus2Converter" />
+
+        <Color x:Key="PropertiesColor_">#FFC9C9C9</Color>
+        <Color x:Key="PropertyGroupBorder_">#ff404040</Color>
+        <SolidColorBrush x:Key="PropertiesColor"
+                         Color="{DynamicResource PropertiesColor_}" />
+        <SolidColorBrush x:Key="PropertyGroupBorderColor"
+                         Color="{DynamicResource PropertyGroupBorder_}" />
+    </Window.Resources>
+
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="100" />
-        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="170" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
 
         <!--canvas-->
         <Border BorderThickness="0 0 0 1"
                 BorderBrush="#FF424242"
-                Margin="0,0,0,5">
+                Margin="0,0,0,5"
+                Grid.Column="1">
 
             <Canvas x:Name="DrawCanvas"
                     Background="#FF424242">
 
-                       
                 <Image x:Name="Image1"
-                       Width="295"
+                       Width="{Binding ElementName=DrawCanvas,Path=ActualWidth,
+                            Converter={StaticResource HalfValueConverter},ConverterParameter=@VALUE}"
                        Height="{Binding ElementName=DrawCanvas,Path=ActualHeight}"
                        Canvas.Left="0"
                        Canvas.Top="0"
                        VerticalAlignment="Top"
                        HorizontalAlignment="Left" />
-                       <!--Source="data/sintel_render.png"-->
-
-                <Rectangle Width="2"
-                           Canvas.Left="296"
-                           Height="{Binding ElementName=DrawCanvas,Path=ActualHeight}"
-                           Fill="#FFB0B0B0" />
 
                 <Image x:Name="Image2"
-                       Width="295"
+                       Width="{Binding ElementName=DrawCanvas,Path=ActualWidth,
+                            Converter={StaticResource HalfValueConverter},ConverterParameter=@VALUE}"
                        Height="{Binding ElementName=DrawCanvas,Path=ActualHeight}"
-                       Canvas.Left="298"
+                       Canvas.Left="{Binding ElementName=DrawCanvas,Path=ActualWidth,
+                            Converter={StaticResource HalfValuePlus2Converter},ConverterParameter=@VALUE}"
                        Canvas.Top="0"
                        VerticalAlignment="Top"
                        HorizontalAlignment="Left" />
-                       <!--Source="data/15after.png"-->
+
+                <Rectangle x:Name="ImageDivider"
+                           Width="2"
+                           Canvas.Left="{Binding ElementName=DrawCanvas,Path=ActualWidth,
+                                Converter={StaticResource HalfValueConverter},ConverterParameter=@VALUE}"
+                           Height="{Binding ElementName=DrawCanvas,Path=ActualHeight}"
+                           Fill="#FFB0B0B0" />
             </Canvas>
         </Border>
 
-        <!--bottom row-->
-        <TabControl Grid.Row="2">
-            <TabItem Header="TabItem">
-                <Grid Background="#FFE5E5E5" />
-            </TabItem>
-            <TabItem Header="TabItem">
-                <Grid Background="#FFE5E5E5" />
-            </TabItem>
-        </TabControl>
+        <Border BorderThickness="0 0 1 0"
+                BorderBrush="{DynamicResource PropertiesColor}"
+                Margin="0,0,0,0"
+                Grid.Column="0">
+
+            <TreeView Background="#FF272727"
+                      BorderBrush="{x:Null}"
+                      VerticalContentAlignment="Top">
+
+                <!---->
+                <!--General-->
+                <!---->
+                <TreeViewItem IsExpanded="True">
+                    <TreeViewItem.Header>
+                        <Border BorderThickness="0 0 0 1"
+                                BorderBrush="{DynamicResource PropertyGroupBorderColor}"
+                                Margin="0,10,0,0"
+                                Grid.Column="0"
+                                Width="124">
+                            <Label Content="General"
+                                   Foreground="{DynamicResource PropertiesColor}" />
+                        </Border>
+                    </TreeViewItem.Header>
+                    <Grid Margin="-20,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                        </Grid.RowDefinitions>
+
+                        <Label Content="Image left:"
+                               ToolTip="Show keypoints for left image"
+                               Foreground="{DynamicResource PropertiesColor}" />
+                        <Label Content="Image right:"
+                               ToolTip="Show keypoints for right image"
+                               Foreground="{DynamicResource PropertiesColor}"
+                               Grid.Row="2" />
+                        <!--
+                        <TextBox x:Name="ImagePath1"
+                                 Grid.Row="1"
+                                 Grid.ColumnSpan="2" TextAlignment="Right" />
+                        <TextBox x:Name="ImagePath2"
+                                 Grid.Row="3"
+                                 Grid.ColumnSpan="2" TextAlignment="Right" />
+                        
+                        
+                          ItemsSource="{Binding Path=ImagePaths}"
+                          DisplayMemberPath="ValueString"
+                          SelectedValuePath="ValueString"
+                          SelectedValue="{Binding ColorString}"
+                        -->
+
+                <ComboBox x:Name="ImagePath1"
+                          Grid.Row="1"
+                          Grid.ColumnSpan="2" />
+
+                <Label Content="Keypoints left"
+                       ToolTip="Show keypoints for left image"
+                       Grid.Row="4"
+                       Foreground="{DynamicResource PropertiesColor}" />
+                <Label Content="Keypoints right"
+                       ToolTip="Show keypoints for right image"
+                       Foreground="{DynamicResource PropertiesColor}"
+                       Grid.Row="5" />
+                <Label Content="Neighbours"
+                       ToolTip="Show keypoints for right image"
+                       Foreground="{DynamicResource PropertiesColor}"
+                       Grid.Row="6" />
+
+                <CheckBox x:Name="KeypointsLeft"
+                          Grid.Column="1"
+                          Grid.Row="4"
+                          VerticalAlignment="Center" />
+                <CheckBox x:Name="KeypointsRight"
+                          Grid.Column="1"
+                          Grid.Row="5"
+                          VerticalAlignment="Center" />
+                <CheckBox x:Name="Neighbours"
+                          Grid.Column="1"
+                          Grid.Row="6"
+                          VerticalAlignment="Center" />
+    </Grid>
+    </TreeViewItem>
+
+    <!---->
+                <!--Closeness filter-->
+    <!---->
+                <TreeViewItem IsExpanded="True">
+                    <TreeViewItem.Header>
+                        <Border BorderThickness="0 0 0 1"
+                                BorderBrush="{DynamicResource PropertyGroupBorderColor}"
+                                Margin="0,10,0,5"
+                                Grid.Column="0"
+                                Width="124">
+                            <Label Content="Closeness filter"
+                                   Foreground="{DynamicResource PropertiesColor}" Margin="0" />
+                        </Border>
+                    </TreeViewItem.Header>
+                    <Grid Margin="-20,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                        </Grid.RowDefinitions>
+                        <Button Content="Update"
+                                Grid.Row="0"
+                                Height="30" />
+                        <Label Content="N:"
+                               ToolTip="Neighbourhood size"
+                               Foreground="{DynamicResource PropertiesColor}"
+                               Grid.Row="1" />
+                        <Label Content="Min percentage:"
+                               ToolTip="Show keypoints for left image"
+                               Foreground="{DynamicResource PropertiesColor}"
+                               Grid.Row="3" />
+                        <TextBox x:Name="N"
+                                 Grid.Row="2" TextAlignment="Right"
+                                 Grid.ColumnSpan="2" />
+                        <Slider x:Name="MinPercentage"
+                                 Grid.Row="4" 
+                                 Grid.ColumnSpan="2" Maximum="1" SmallChange="0.01" TickPlacement="TopLeft" Value="0.5" TickFrequency="2" LargeChange="0.1"/>
+                    </Grid>
+                </TreeViewItem>
+
+                 <!---->
+    <!--Ransac-->
+    <!---->
+                <TreeViewItem IsExpanded="True">
+                    <TreeViewItem.Header>
+                        <Border BorderThickness="0 0 0 1"
+                                BorderBrush="{DynamicResource PropertyGroupBorderColor}"
+                                Margin="0,10,0,5"
+                                Grid.Column="0"
+                                Width="124">
+                            <Label Content="RANSAC"
+                                   Foreground="{DynamicResource PropertiesColor}" />
+                        </Border>
+                    </TreeViewItem.Header>
+                    <Grid Margin="-20,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                        </Grid.RowDefinitions>
+                        <Button Content="Update"
+                                Grid.Row="0"
+                                Height="30" />
+                        <Label Content="Iterations:"
+                               Foreground="{DynamicResource PropertiesColor}"
+                               Grid.Row="1" />
+                        <Label Content="Max error:"
+                               Foreground="{DynamicResource PropertiesColor}"
+                               Grid.Row="3" />
+                        <Label Content="R:"
+                               Foreground="{DynamicResource PropertiesColor}"
+                               Grid.Row="5" />
+                        <Label Content="r:"
+                               Foreground="{DynamicResource PropertiesColor}"
+                               Grid.Row="7" />
+                        
+                        
+                        <TextBox x:Name="Iterations" TextAlignment="Right"
+                                 Grid.Row="2"
+                                 Grid.ColumnSpan="2" />
+                        <TextBox x:Name="MaxError" TextAlignment="Right"
+                                 Grid.Row="4"
+                                 Grid.ColumnSpan="2" />
+                         <TextBox x:Name="R" TextAlignment="Right"
+                                 Grid.Row="6"
+                                 Grid.ColumnSpan="2" />
+                         <TextBox x:Name="r" TextAlignment="Right"
+                                 Grid.Row="8"
+                                 Grid.ColumnSpan="2" />
+
+                    </Grid>
+                </TreeViewItem>
+
+            </TreeView>
+
+        </Border>
 
     </Grid>
 </Window>

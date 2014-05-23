@@ -7,6 +7,8 @@ using AI_4.model;
 using System.Windows.Shapes;
 using System.Windows.Media;
 using System.Collections.Generic;
+using System.Windows.Data;
+using System.Globalization;
 
 namespace AI_4 {
 
@@ -38,10 +40,10 @@ namespace AI_4 {
 			this.Left = 0;// desktopWorkingArea.Right - this.Width;
 			this.Top = desktopWorkingArea.Bottom - this.Height;
 
-			//setImage("sintel_render.png", IMAGE_PANEL.IP_LEFT);
+			setImage("sintel_render.png", IMAGE_PANEL.IP_LEFT);
 			setImage("15after.png", IMAGE_PANEL.IP_RIGHT);
 			//setImage("TheRoad1.png", IMAGE_PANEL.IP_LEFT);
-			setImage("TheRoad2.png", IMAGE_PANEL.IP_LEFT);
+			//setImage("TheRoad2.png", IMAGE_PANEL.IP_RIGHT);
 
 			if (dataLeft != null && dataRight != null) {
 				var matcher = new NeighbourPointsMatcher();
@@ -49,9 +51,9 @@ namespace AI_4 {
 				var ransac = new A2_RANSAC();
 
 				try {
-					//var pairs = matcher.match(dataLeft, dataRight);
-					//Console.WriteLine("[Info] Found " + pairs.Count + " pairs");
-					//showNeighbourConnectionLines(pairs);
+					var pairs = matcher.match(dataLeft, dataRight);
+					Console.WriteLine("[Info] Found " + pairs.Count + " pairs");
+					showNeighbourConnectionLines(pairs);
 
 					//var pairs2 =ai1.reduce(pairs, dataLeft, dataRight);
 					//Console.WriteLine("[Info] Reduced to " + pairs2.Count + " pairs");
@@ -105,7 +107,7 @@ namespace AI_4 {
 					else dataRight = imgData;
 
 					showKeypoints(target);
-					Console.WriteLine("[Info] HARAFF SIFT parse success");
+					Console.WriteLine("[Info] HARAFF SIFT parse success: "+imgData.Keypoints.Count+" keypoints");
 				} catch (Exception e) {
 					Console.WriteLine("[Error] Loading HARAFF SIFT error: " + e.Message + "\n\tFile: '" + path + "'");
 				}
@@ -227,7 +229,7 @@ namespace AI_4 {
 				var kpB = kp2[idB];
 
 				var line = new Line();
-				line.Stroke = Brushes.Yellow;
+				line.Stroke = new SolidColorBrush(Color.FromArgb(32, 255, 255, 0));
 				line.X1 = kpA.X * scaleX_1 + baseX_1;
 				line.Y1 = kpA.Y * scaleY_1 + baseY_1;
 				line.X2 = kpB.X * scaleX_2 + baseX_2;
@@ -244,4 +246,25 @@ namespace AI_4 {
 		#endregion display data on the images
 	}
 
+
+
+
+	public class HalfValueConverter : IValueConverter {
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+			return ((double)value) / 2 - 1;
+		}
+
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+			return (((double)value) + 1) * 2;
+		}
+	}
+	public class HalfValuePlus2Converter : IValueConverter {
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+			return ((double)value) / 2 +1;
+		}
+
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+			return (((double)value) + 1) +1;
+		}
+	}
 }
