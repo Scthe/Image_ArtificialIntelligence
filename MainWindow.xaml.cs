@@ -39,9 +39,9 @@ namespace AI_4 {
 			this.Top = desktopWorkingArea.Bottom - this.Height;
 
 			//setImage("sintel_render.png", IMAGE_PANEL.IP_LEFT);
-			//setImage("15after.png", IMAGE_PANEL.IP_RIGHT);
-			setImage("TheRoad1.png", IMAGE_PANEL.IP_LEFT);
-			setImage("TheRoad2.png", IMAGE_PANEL.IP_RIGHT);
+			setImage("15after.png", IMAGE_PANEL.IP_RIGHT);
+			//setImage("TheRoad1.png", IMAGE_PANEL.IP_LEFT);
+			setImage("TheRoad2.png", IMAGE_PANEL.IP_LEFT);
 
 			if (dataLeft != null && dataRight != null) {
 				var matcher = new NeighbourPointsMatcher();
@@ -49,8 +49,8 @@ namespace AI_4 {
 				var ransac = new A2_RANSAC();
 
 				try {
-					var pairs = matcher.match(dataLeft, dataRight);
-					Console.WriteLine("[Info] Found " + pairs.Count + " pairs");
+					//var pairs = matcher.match(dataLeft, dataRight);
+					//Console.WriteLine("[Info] Found " + pairs.Count + " pairs");
 					//showNeighbourConnectionLines(pairs);
 
 					//var pairs2 =ai1.reduce(pairs, dataLeft, dataRight);
@@ -65,7 +65,7 @@ namespace AI_4 {
 					Console.WriteLine("[Error] NeighbourPointsMatcher: " + ex.Message);
 				}
 			} else {
-				Console.WriteLine("[Error] Some error happened and it is not possible to invoke NeighbourPointsMatcher");
+				Console.WriteLine("[Error] Could not analize images, data for either image left or image right was not read");
 			}
 
 		}
@@ -127,8 +127,8 @@ namespace AI_4 {
 		private static void getRealImageSize(Image imgView, BitmapImage img, out double outW, out double outH) {
 			double w = imgView.Width;
 			double h = imgView.Height;
-			double imgW = img.Width;
-			double imgH = img.Height;
+			double imgW = img.PixelWidth; // http://stackoverflow.com/questions/11571365/how-to-get-the-width-and-height-of-a-bitmapimage-in-metro
+			double imgH = img.PixelHeight;
 			double aspectView = w / h; // ~ 1
 			double aspectImg = imgW / imgH;
 			if (aspectImg <= aspectView) {
@@ -161,11 +161,11 @@ namespace AI_4 {
 			getRealImageSize(imgView, img, out w, out h);
 			outBaseX = (double)imgView.GetValue(Canvas.LeftProperty);
 			outBaseY = (double)imgView.GetValue(Canvas.TopProperty); // should be 0 anyway
-			//Console.WriteLine("[Debug] View " + target.ToString() + String.Format(" x:{0}; y:{1}; w:{2}; h:{3}", baseX, baseY, w, h));
+			//Console.WriteLine("[Debug] View " + target.ToString() + String.Format(" x:{0}; y:{1}; w:{2}; h:{3}", outBaseX, outBaseY, w, h));
 
 			// read image dimensions
-			double imgW = img.Width;
-			double imgH = img.Height;
+			double imgW = img.PixelWidth;
+			double imgH = img.PixelHeight;
 			//Console.WriteLine("[Debug] Bitmap " + target.ToString() + String.Format(" w:{0}; h:{1}", imgW, imgH));
 
 			// scale factors
