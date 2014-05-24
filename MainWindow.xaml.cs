@@ -16,6 +16,8 @@ using System.Threading;
 
 namespace AI_4 {
 
+	// TODO add algo working indicator ( just change status)
+
 	public enum IMAGES_ENUM {
 		[Description(" ")]
 		None,
@@ -93,6 +95,7 @@ namespace AI_4 {
 
 			RemoveKeypoints(target);
 			RemoveNeighbours();
+			RemoveRansacResult();
 			neighbourhoodCompactnessPairs = null;
 
 			Image img = target == IMAGE_PANEL.IP_LEFT ? Image1 : Image2;
@@ -329,6 +332,48 @@ namespace AI_4 {
 			}
 		}
 
+		private void DisplayRansacResult(RANSAC_RESULT ransacMatrix) {
+			var data = dataLeft;
+			if (cts != null || data == null) {
+				Console.WriteLine("[Error] Could not display RANSAC results - data not valid / running async");
+				return;
+			}
+
+			double baseX, baseY;
+			double scaleX, scaleY;
+			GetDrawTransformation(IMAGE_PANEL.IP_RIGHT, out baseX, out baseY, out scaleX, out scaleY);
+
+			// draw
+			const double radius = 1;
+			foreach (var keypoint in data.Keypoints) {
+				double _x, _y;
+				ransacMatrix.apply(keypoint.X, keypoint.Y, out _x, out _y);
+
+				double xx = _x * scaleX + baseX;
+				double yy = _y * scaleY + baseY;
+
+				Ellipse e = new Ellipse() { Uid = "ransac" + keypoint.ID };
+				e.SetValue(Canvas.LeftProperty, xx - radius);
+				e.SetValue(Canvas.TopProperty, yy - radius);
+				e.Width = radius * 2;
+				e.Height = radius * 2;
+				e.Fill = new SolidColorBrush(Color.FromArgb(255, 0, 255, 0));
+				DrawCanvas.Children.Add(e);
+			}
+		}
+
+		private void RemoveRansacResult() {
+			List<UIElement> itemstoremove = new List<UIElement>();
+			foreach (UIElement ui in DrawCanvas.Children) {
+				if (ui.Uid.StartsWith("ransac")) {
+					itemstoremove.Add(ui);
+				}
+			}
+			foreach (UIElement ui in itemstoremove) {
+				DrawCanvas.Children.Remove(ui);
+			}
+		}
+
 		#endregion display data on the images
 
 
@@ -413,6 +458,7 @@ namespace AI_4 {
 		}
 
 		private void RANSAC_Click(object sender, RoutedEventArgs e) {
+			RemoveRansacResult();
 			if (cts != null || dataLeft == null || dataRight == null) {
 				Console.WriteLine("[Warning] Could not analize images, data for either image left or image right was not read");
 				return;
@@ -452,8 +498,8 @@ namespace AI_4 {
 			}
 
 			try {
-				//var ransacMatrix = ransac.reduce(pairs, dataLeft, dataRight);
-				//displayRansacResult(ransacMatrix);
+				var ransacMatrix = a2_ransac.reduce(_pairs_, dataLeft, dataRight);
+				DisplayRansacResult(ransacMatrix);
 				Console.WriteLine("[Info] fin RANSAC");
 			} catch (Exception ee) {
 				Console.WriteLine("[Error] RANSAC error: " + ee.Message);

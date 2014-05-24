@@ -10,6 +10,17 @@ namespace AI_4.model {
 		internal KeyPoint[] kp1 = new KeyPoint[3];
 		internal KeyPoint[] kp2 = new KeyPoint[3];
 		internal Matrix<double> matrix;
+
+		/// <summary>
+		/// Apply transformation from model to point (x,y).
+		/// Can be used to display result - given set of keypoints from img1 apply transformation and then display expected results
+		/// </summary>
+		public void apply(float x, float y, out double outX, out double outY) {
+			Vector<double> vec = new DenseVector(new double[] { x, y, 1 });
+			var v = matrix * vec;
+			outX = v[0];
+			outY = v[1];
+		}
 	}
 
 	class A2_RANSAC {
@@ -30,12 +41,11 @@ namespace AI_4.model {
 		public RANSAC_RESULT reduce(List<Tuple<int, int>> pairs, ImageData img1, ImageData img2) {
 			var ks1 = img1.Keypoints;
 			var ks2 = img2.Keypoints;
-			//var tmpKPs = new List<Tuple<int, int>>(pairs.Capacity);
+			//Tuple<double, RANSAC_RESULT>[] models = new Tuple<double, RANSAC_RESULT>[IterCount];
 
 			RANSAC_RESULT bestModel = null;
 			double bestScore = double.MinValue;
 			for (int i = 0; i < IterCount; i++) {
-				//Console.WriteLine("[Debug] ransac iter: " + i);
 				RANSAC_RESULT model = createModelNonOptimized(pairs, ks1, ks2);
 
 				// iterate over all points and calculate respective error
@@ -44,12 +54,11 @@ namespace AI_4.model {
 					var kpA = ks1[pair.Item1];
 					var kpB = ks2[pair.Item2];
 					double expectedX, expectedY;
-					apply(kpA.X, kpA.Y, model, out expectedX, out expectedY);
-					if (errorMetric(expectedX, expectedY, kpB.X, kpB.Y) < MaxError)
+					model.apply(kpA.X, kpA.Y, out expectedX, out expectedY);
+					if (CalculateDistance(expectedX, expectedY, kpB.X, kpB.Y) < MaxError)
 						score += 1;
 				}
 
-				Console.WriteLine("[Debug] ransac iter: " + i + " score " + score + " /" + pairs.Count);
 				// score
 				if (score > bestScore) {
 					bestScore = score;
@@ -60,22 +69,9 @@ namespace AI_4.model {
 			return bestModel;
 		}
 
-		#region utils main
-
-		/// <summary>
-		/// Keypoint that is paired with the provided pointSrc
-		/// </summary>
-		/// <returns>Should always return resulte</returns>
-		//private static KeyPoint getPairedKeypoint(KeyPoint pointSrc, List<Tuple<int, int>> pairs, List<KeyPoint> pointsDst) {
-		//Tuple<int, int> currentPair = pairs.FirstOrDefault((p) => p.Item1 == pointSrc.ID);
-		//return currentPair == null ? null : pointsDst[currentPair.Item2];
-		//}
-
-		private static double errorMetric(double x1, double y1, double x2, double y2) {
+		private static double CalculateDistance(double x1, double y1, double x2, double y2) {
 			return Math.Sqrt(Math.Pow(x1 - x2, 2) + Math.Pow(y1 - y2, 2));
 		}
-
-		#endregion
 
 		#region private
 
@@ -114,21 +110,17 @@ namespace AI_4.model {
 				model.kp1[2] = l1[p3.Item1];
 				model.kp2[1] = l2[p2.Item2];
 				model.kp2[2] = l2[p3.Item2];
-			} while (model.kp1[2] == model.kp1[0] || model.kp1[1] == model.kp1[0] || model.kp1[2] == model.kp1[1]
-				|| model.kp2[2] == model.kp2[0] || model.kp2[1] == model.kp2[0] || model.kp2[2] == model.kp2[1]);
+			
+			} while (model.kp1[2] == model.kp1[0] ||
+				model.kp1[1] == model.kp1[0] ||
+				model.kp1[2] == model.kp1[1] ||
+
+				model.kp2[2] == model.kp2[0] ||
+				model.kp2[1] == model.kp2[0] ||
+				model.kp2[2] == model.kp2[1]);
+
 			model.matrix = createAffinicMatrix(l1, l2, model);
 			return model;
-		}
-
-		/// <summary>
-		/// Apply transformation from model to point (x,y).
-		/// Can be used to display result - given set of keypoints from img1 apply transformation and then display expected results
-		/// </summary>
-		public static void apply(float x, float y, RANSAC_RESULT model, out double outX, out double outY) {
-			Vector<double> vec = new DenseVector(new double[] { x, y, 1 });
-			var v = model.matrix * vec;
-			outX = v[0];
-			outY = v[1];
 		}
 
 		#endregion
@@ -140,12 +132,12 @@ namespace AI_4.model {
 			//model.kp2[0] == model.kp2[1] || model.kp2[0] == model.kp2[2] || model.kp2[2] == model.kp2[1])
 			//return false; // will fail anyway at dist > r
 
-			double d1 = errorMetric(model.kp1[0].X, model.kp1[0].Y, model.kp1[1].Y, model.kp1[1].Y);
-			double d2 = errorMetric(model.kp1[0].X, model.kp1[0].Y, model.kp1[2].Y, model.kp1[2].Y);
-			double d3 = errorMetric(model.kp1[1].X, model.kp1[1].Y, model.kp1[2].Y, model.kp1[2].Y);
-			double d4 = errorMetric(model.kp2[0].X, model.kp2[0].Y, model.kp2[1].Y, model.kp2[1].Y);
-			double d5 = errorMetric(model.kp2[0].X, model.kp2[0].Y, model.kp2[2].Y, model.kp2[2].Y);
-			double d6 = errorMetric(model.kp2[1].X, model.kp2[1].Y, model.kp2[2].Y, model.kp2[2].Y);
+			double d1 = CalculateDistance(model.kp1[0].X, model.kp1[0].Y, model.kp1[1].Y, model.kp1[1].Y);
+			double d2 = CalculateDistance(model.kp1[0].X, model.kp1[0].Y, model.kp1[2].Y, model.kp1[2].Y);
+			double d3 = CalculateDistance(model.kp1[1].X, model.kp1[1].Y, model.kp1[2].Y, model.kp1[2].Y);
+			double d4 = CalculateDistance(model.kp2[0].X, model.kp2[0].Y, model.kp2[1].Y, model.kp2[1].Y);
+			double d5 = CalculateDistance(model.kp2[0].X, model.kp2[0].Y, model.kp2[2].Y, model.kp2[2].Y);
+			double d6 = CalculateDistance(model.kp2[1].X, model.kp2[1].Y, model.kp2[2].Y, model.kp2[2].Y);
 			double r2 = r * r, R2 = R * R;
 			return
 				d1 > r2 && d1 < R2 &&
