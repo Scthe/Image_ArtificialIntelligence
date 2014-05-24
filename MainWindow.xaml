@@ -60,9 +60,15 @@
             </Canvas>
         </Border>
 
+        <Rectangle x:Name="State"
+                   Height="5"
+                   Grid.Column="0"
+                   Fill="#FFD4330F"
+                   VerticalAlignment="Top" />
+
         <Border BorderThickness="0 0 1 0"
                 BorderBrush="{DynamicResource PropertiesColor}"
-                Margin="0,0,0,0"
+                Margin="0,5,0,0"
                 Grid.Column="0">
 
             <TreeView Background="#FF272727"

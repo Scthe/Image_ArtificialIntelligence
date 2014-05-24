@@ -17,8 +17,6 @@ using System.Globalization;
 
 namespace AI_4 {
 
-	// TODO add 'is-busy' indicator ? ( mark running async task)
-
 	public enum IMAGES_ENUM {
 		[Description(" ")]
 		None,
@@ -39,6 +37,10 @@ namespace AI_4 {
 
 		readonly public static NumberStyles numberStyles = NumberStyles.Number;
 		readonly public static CultureInfo cultureInfo = CultureInfo.InvariantCulture;
+		readonly private static SolidColorBrush greenBrush = new SolidColorBrush(
+			(Color)ColorConverter.ConvertFromString("#FF0FD433")); // #FF0FD433
+		readonly private static SolidColorBrush redBrush = new SolidColorBrush(
+			(Color)ColorConverter.ConvertFromString("#FFD4330F"));
 
 		private enum IMAGE_PANEL { IP_LEFT, IP_RIGHT }
 
@@ -111,6 +113,8 @@ namespace AI_4 {
 		private async Task LoadImgData(string fullImagePath, IMAGE_PANEL target) {
 			// http://blog.stephencleary.com/2012/02/async-and-await.html
 
+			State.Fill = redBrush;
+
 			if (cts != null) {
 				cts.Cancel();
 			}
@@ -151,6 +155,8 @@ namespace AI_4 {
 			} catch (OperationCanceledException) {
 			}
 			cts = null;
+
+			State.Fill = greenBrush;
 		}
 
 		private void ReloadPairs(CancellationTokenSource cts) {
