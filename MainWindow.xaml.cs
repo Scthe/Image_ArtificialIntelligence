@@ -11,8 +11,11 @@ using System.Windows.Data;
 using System.Globalization;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AI_4 {
+
+	// TODO add 'is-busy' indicator ? ( mark running async task)
 
 	public enum IMAGES_ENUM {
 		[Description(" ")]
@@ -61,38 +64,11 @@ namespace AI_4 {
 			this.Left = 0;// desktopWorkingArea.Right - this.Width;
 			this.Top = desktopWorkingArea.Bottom - this.Height;
 
-			setImage("sintel_render.png", IMAGE_PANEL.IP_LEFT);
-			setImage("15after.png", IMAGE_PANEL.IP_RIGHT);
-
-			/*
-			if (dataLeft != null && dataRight != null) {
-				var matcher = new NeighbourPointsMatcher();
-				var ai1 = new A1_NeighbourhoodCompactnessAnalysis();
-				var ransac = new A2_RANSAC();
-
-				try {
-					pairs = matcher.match(dataLeft, dataRight);
-					Console.WriteLine("[Info] Found " + pairs.Count + " pairs");
-					//showNeighbourConnectionLines(pairs);
-
-					//var pairs2 =ai1.reduce(pairs, dataLeft, dataRight);
-					//Console.WriteLine("[Info] Reduced to " + pairs2.Count + " pairs");
-					//showNeighbourConnectionLines(pairs2);
-
-					//var ransacMatrix = ransac.reduce(pairs, dataLeft, dataRight);
-					//displayRansacResult(ransacMatrix);
-
-
-				} catch (Exception ex) {
-					Console.WriteLine("[Error] NeighbourPointsMatcher: " + ex.Message);
-				}
-			} else {
-				Console.WriteLine("[Error] Could not analize images, data for either image left or image right was not read");
-			}
-			*/
+			SetImage("sintel_render.png", IMAGE_PANEL.IP_LEFT);
+			//setImage("15after.png", IMAGE_PANEL.IP_RIGHT);
 		}
 
-		private void setImage(string imgName, IMAGE_PANEL target) {
+		private void SetImage(string imgName, IMAGE_PANEL target) {
 			//http://stackoverflow.com/questions/12866758/placing-bitmap-in-canvas-in-c-sharp
 
 			removeKeypoints(target);
@@ -111,18 +87,8 @@ namespace AI_4 {
 				if (target == IMAGE_PANEL.IP_LEFT) imgLeft = bitmap;
 				else imgRight = bitmap;
 
-				loadImgData(path, target);
+				LoadImgData(path, target);
 
-				// update neighbours
-				if (dataLeft != null && dataRight != null) {
-					var matcher = new NeighbourPointsMatcher();
-					try {
-						pairs = matcher.match(dataLeft, dataRight);
-						Console.WriteLine("[Info] Found " + pairs.Count + " pairs");
-					} catch (Exception ex) {
-						Console.WriteLine("[Error] NeighbourPointsMatcher: " + ex.Message);
-					}
-				}
 			} else {
 				Console.WriteLine("[Error] Could not find '" + imgName + "'\n\tSearched in: '" + path + "'");
 			}
@@ -130,18 +96,24 @@ namespace AI_4 {
 
 		#region controller
 
-		private void loadImgData(string fullImagePath, IMAGE_PANEL target) {
-			if (target == IMAGE_PANEL.IP_LEFT) { dataLeft = null; } else { dataRight = null; }
+		private async void LoadImgData(string fullImagePath, IMAGE_PANEL target) {
+			// http://blog.stephencleary.com/2012/02/async-and-await.html
+
+			if (target == IMAGE_PANEL.IP_LEFT) dataLeft = null;
+			else dataRight = null;
 
 			var path = fullImagePath + ".haraff.sift";
+			bool ok = false;
 			if (File.Exists(path)) {
 				try {
 					SiftLoader l = new SiftLoader();
-					var imgData = l.load(path);
+					await Task.Run(() => l.load(path));
+					ImageData imgData = l.Result;
 
 					if (target == IMAGE_PANEL.IP_LEFT) dataLeft = imgData;
 					else dataRight = imgData;
 
+					ok = true;
 					Console.WriteLine("[Info] HARAFF SIFT parse success: " + imgData.Keypoints.Count + " keypoints");
 				} catch (Exception e) {
 					Console.WriteLine("[Error] Loading HARAFF SIFT error: " + e.Message + "\n\tFile: '" + path + "'");
@@ -149,6 +121,23 @@ namespace AI_4 {
 
 			} else {
 				Console.WriteLine("[Error] Could not find HARAFF SIFT \n\tSearched in: '" + path + "'");
+			}
+
+			// if everything went ok - update neighbours
+			if (ok) {
+				await Task.Run(() => ReloadPairs());
+			}
+		}
+
+		private void ReloadPairs() {
+			if (dataLeft != null && dataRight != null) {
+				var matcher = new NeighbourPointsMatcher();
+				try {
+					pairs = matcher.match(dataLeft, dataRight);
+					Console.WriteLine("[Info] Found " + pairs.Count + " pairs");
+				} catch (Exception ex) {
+					Console.WriteLine("[Error] NeighbourPointsMatcher: " + ex.Message);
+				}
 			}
 		}
 
@@ -277,6 +266,30 @@ namespace AI_4 {
 			}
 		}
 
+		private void removeNeighbours() {
+			List<UIElement> itemstoremove = new List<UIElement>();
+			foreach (UIElement ui in DrawCanvas.Children) {
+				if (ui.Uid.StartsWith("Line")) {
+					itemstoremove.Add(ui);
+				}
+			}
+			foreach (UIElement ui in itemstoremove) {
+				DrawCanvas.Children.Remove(ui);
+			}
+		}
+
+		private void removeKeypoints(IMAGE_PANEL target) {
+			List<UIElement> itemstoremove = new List<UIElement>();
+			foreach (UIElement ui in DrawCanvas.Children) {
+				if (ui.Uid.StartsWith("kp") && ui.Uid.EndsWith(target.ToString())) {
+					itemstoremove.Add(ui);
+				}
+			}
+			foreach (UIElement ui in itemstoremove) {
+				DrawCanvas.Children.Remove(ui);
+			}
+		}
+
 		#endregion display data on the images
 
 
@@ -291,7 +304,7 @@ namespace AI_4 {
 					//OnPropertyChanged();
 					Console.WriteLine(IMAGE_PANEL.IP_LEFT.ToString() + " > " + value.ToString());
 					var path = EnumHelper.Description(value);
-					setImage(path, IMAGE_PANEL.IP_LEFT);
+					SetImage(path, IMAGE_PANEL.IP_LEFT);
 				}
 			}
 		}
@@ -304,7 +317,7 @@ namespace AI_4 {
 					//OnPropertyChanged();
 					Console.WriteLine(IMAGE_PANEL.IP_RIGHT.ToString() + " > " + value.ToString());
 					var path = EnumHelper.Description(value);
-					setImage(path, IMAGE_PANEL.IP_RIGHT);
+					SetImage(path, IMAGE_PANEL.IP_RIGHT);
 				}
 			}
 		}
@@ -331,31 +344,53 @@ namespace AI_4 {
 			}
 		}
 
-		private void removeNeighbours() {
-			List<UIElement> itemstoremove = new List<UIElement>();
-			foreach (UIElement ui in DrawCanvas.Children) {
-				if (ui.Uid.StartsWith("Line")) {
-					itemstoremove.Add(ui);
+
+		/* if (dataLeft != null && dataRight != null) {
+				var matcher = new NeighbourPointsMatcher();
+				var ai1 = new A1_NeighbourhoodCompactnessAnalysis();
+				var ransac = new A2_RANSAC();
+
+				try {
+					pairs = matcher.match(dataLeft, dataRight);
+					Console.WriteLine("[Info] Found " + pairs.Count + " pairs");
+					//showNeighbourConnectionLines(pairs);
+
+					//var pairs2 =ai1.reduce(pairs, dataLeft, dataRight);
+					//Console.WriteLine("[Info] Reduced to " + pairs2.Count + " pairs");
+					//showNeighbourConnectionLines(pairs2);
+
+					//var ransacMatrix = ransac.reduce(pairs, dataLeft, dataRight);
+					//displayRansacResult(ransacMatrix);
+
+
+				} catch (Exception ex) {
+					Console.WriteLine("[Error] NeighbourPointsMatcher: " + ex.Message);
 				}
+			} else {
+				Console.WriteLine("[Error] Could not analize images, data for either image left or image right was not read");
+			}*/
+		private void UpdateClosenessFilter_Click(object sender, RoutedEventArgs e) {
+			if (dataLeft == null || dataRight == null) {
+				Console.WriteLine("[Warning] Could not analize images, data for either image left or image right was not read");
+				return;
 			}
-			foreach (UIElement ui in itemstoremove) {
-				DrawCanvas.Children.Remove(ui);
-			}
+
+			// read parameters
+
+
+			Console.WriteLine(String.Format("[Info] Close"));
 		}
 
-		private void removeKeypoints(IMAGE_PANEL target) {
-			List<UIElement> itemstoremove = new List<UIElement>();
-			foreach (UIElement ui in DrawCanvas.Children) {
-				if (ui.Uid.StartsWith("kp") && ui.Uid.EndsWith(target.ToString())) {
-					itemstoremove.Add(ui);
-				}
+		private void RANSAC_Filter_Click(object sender, RoutedEventArgs e) {
+			if (dataLeft == null || dataRight == null) {
+				Console.WriteLine("[Warning] Could not analize images, data for either image left or image right was not read");
+				return;
 			}
-			foreach (UIElement ui in itemstoremove) {
-				DrawCanvas.Children.Remove(ui);
-			}
+			Console.WriteLine(String.Format("[Info] RANSAC"));
 		}
 
 		#endregion
+
 	}
 
 

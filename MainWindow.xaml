@@ -219,9 +219,10 @@
                             <RowDefinition Height="auto" />
                         </Grid.RowDefinitions>
                         
-                        <Button Content="Update"
+                        <Button x:Name="UpdateClosenessFilter"
+                                Content="Update"
                                 Grid.Row="0"
-                                Height="30" />
+                                Height="30" Click="UpdateClosenessFilter_Click" />
                         
                         <Label Content="N:"
                                ToolTip="Neighbourhood size"
@@ -278,9 +279,10 @@
                             <RowDefinition Height="auto" />
                         </Grid.RowDefinitions>
                         
-                        <Button Content="Update"
+                        <Button x:Name="RANSAC_Filter"
+                                Content="Update"
                                 Grid.Row="0"
-                                Height="30" />
+                                Height="30" Click="RANSAC_Filter_Click" />
                         
                         <Label Content="Iterations:"
                                Grid.Row="1" />

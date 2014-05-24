@@ -4,7 +4,9 @@ namespace AI_4.model {
 
 	public class SiftLoader {
 
-		public ImageData load(string fileName) {
+		public ImageData Result { get; private set; }
+
+		public void load(string fileName) {
 			string[] lines = System.IO.File.ReadAllLines(fileName);
 			if (lines.Length < 2) throw new FormatException("#lines < 2 ?! wtf ?");
 			int kpsCount;
@@ -21,7 +23,7 @@ namespace AI_4.model {
 				builder.readKeyPoint(lines[i]);
 			}
 
-			return builder.build();
+			Result = builder.build();
 		}
 	}
 
