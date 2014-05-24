@@ -82,17 +82,28 @@ namespace AI_4.model {
 		/// Returns id of the KeyPoint that has the closest value for provided trait
 		/// </summary>
 		/// <returns>int as id</returns>
-		public int findClosest(int traitId, int traitVal) {
+		public void findClosest(int traitId, int traitVal, List<int> target) {
+			target.Clear();
+
 			// binary search
 			var arrForTrait = data[traitId];
 			int pos = arrForTrait.BinarySearch(new Tuple<int, int>(traitVal, -1));
-			// TODO ATM it only matches 1 id. Should match range ! Decrease the found index and iterate till trait>traitVal || reachedEnd
 			var posOk = pos < 0 ? ~pos : pos;
 			posOk = Math.Min(posOk, arrForTrait.Count - 1);
 
-
-
-			return arrForTrait[posOk].Item2;
+			// binary search returns single value, while we are interesed in range
+			// ( usually multiple keypoints have the same value)
+			int start = posOk;
+			while (start > 0 && arrForTrait[start].Item1 == traitVal) {
+				start -= 5; // 5 is just to speed up the look up
+			}
+			var it = Math.Max(0, start);
+			while (it < arrForTrait.Count && arrForTrait[it].Item1 <= traitVal) {
+				if (arrForTrait[it].Item1 == traitVal)
+					target.Add(arrForTrait[it].Item2);
+				++it;
+			}
+			//Console.WriteLine("Found: " + target.Count + " [ " + start + " :" + it + "]");
 		}
 	}
 	#endregion

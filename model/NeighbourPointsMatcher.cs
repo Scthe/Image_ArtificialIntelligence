@@ -44,6 +44,8 @@ namespace AI_4.model {
 		private int[] findClose(List<KeyPoint> img1KPs, TraitsLookupMatrix img2lookup) {
 			int[] res = new int[img1KPs.Count];
 			var freqForOtherKeypoint = new Dictionary<int, int>(); // should have used heap
+			
+			List<int> tmpList = new List<int>(img1KPs.Capacity); // We do not have img2 capacity, we wil use img1 capacity instead.. IT IS NOT A CORRECT NUMBER ! still better the default..
 
 			for (int keyPoint1_i = 0; keyPoint1_i < img1KPs.Count; keyPoint1_i++) {
 				KeyPoint keyPoint = img1KPs[keyPoint1_i];
@@ -51,16 +53,18 @@ namespace AI_4.model {
 				for (int i = 0; i < KeyPoint.TRAITS_COUNT; i++) {
 					// get closest keypoint from alien image in respect to the trait
 					int traitVal = keyPoint[i];
-					int otherImgClosestPointIDForTrait = img2lookup.findClosest(i, traitVal);
-					// look up how many times this alien keyPoint happened before
-					int currentFreq;
-					bool alreadyExists = freqForOtherKeypoint.TryGetValue(otherImgClosestPointIDForTrait, out currentFreq);
-					if (!alreadyExists)
-						currentFreq = 1;
-					// increase alien key frequency, set as best if necessary
-					freqForOtherKeypoint[otherImgClosestPointIDForTrait] = currentFreq;
-					if (currentFreq > bestIdFreq) {
-						bestIdFreq = currentFreq; bestId = otherImgClosestPointIDForTrait;
+					img2lookup.findClosest(i, traitVal, tmpList);
+					foreach (var otherImgClosestPointIDForTrait in tmpList) {
+						// look up how many times this alien keyPoint happened before
+						int currentFreq;
+						bool alreadyExists = freqForOtherKeypoint.TryGetValue(otherImgClosestPointIDForTrait, out currentFreq);
+						if (!alreadyExists)
+							currentFreq = 1;
+						// increase alien key frequency, set as best if necessary
+						freqForOtherKeypoint[otherImgClosestPointIDForTrait] = currentFreq;
+						if (currentFreq > bestIdFreq) {
+							bestIdFreq = currentFreq; bestId = otherImgClosestPointIDForTrait;
+						}
 					}
 				}
 				res[keyPoint1_i] = bestId;

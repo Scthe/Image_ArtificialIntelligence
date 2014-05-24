@@ -132,6 +132,7 @@ namespace AI_4 {
 					Console.WriteLine("[Error] Could not find HARAFF SIFT \n\tSearched in: '" + path + "'");
 				}
 
+				// TODO at this point we could allow to display keypoints
 				cts.Token.ThrowIfCancellationRequested();
 
 				// if everything went ok - update neighbours
