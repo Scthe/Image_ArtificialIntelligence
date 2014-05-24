@@ -14,16 +14,16 @@ namespace AI_4.model {
 
 	class A2_RANSAC {
 
-		public int IterCount { set; private get; }
+		public int IterCount { set; get; }
 		// all values are in pixels or pixelsSquare
-		public double MaxError { set; private get; }
-		public double R { set; private get; }
-		public double r { set; private get; }
+		public double MaxError { set; get; }
+		public double R { set; get; }
+		public double r { set; get; }
 
 		public A2_RANSAC() {
 			IterCount = 50;
 			MaxError = 50;
-			R = 400;
+			R = 200;
 			r = 20;
 		}
 

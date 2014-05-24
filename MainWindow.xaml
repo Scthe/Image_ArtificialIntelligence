@@ -255,7 +255,7 @@
                  <!---->
                 <!--Ransac-->
                 <!---->
-                <TreeViewItem IsExpanded="False">
+                <TreeViewItem IsExpanded="True">
                     
                     <TreeViewItem.Header>
                         <Border BorderThickness="0 0 0 1"
@@ -285,14 +285,14 @@
                             <RowDefinition Height="auto" />
                         </Grid.RowDefinitions>
                         
-                        <Button x:Name="RANSAC_Filter"
+                        <Button x:Name="RANSAC"
                                 Content="Update"
                                 Grid.Row="0"
-                                Height="30" Click="RANSAC_Filter_Click" />
+                                Height="30" Click="RANSAC_Click" />
                         
                         <Label Content="Iterations:"
                                Grid.Row="1" />
-                        <Label Content="Max error:"
+                        <Label Content="Max error (%):"
                                Grid.Row="3" />
                         <Label Content="R:"
                                Grid.Row="5" />
@@ -302,8 +302,10 @@
                                Grid.Row="9" />
                         
                         <TextBox x:Name="Iterations"
+                                 PreviewTextInput="textBox_NumbersOnly_i"
                                  Grid.Row="2" />
-                        <TextBox x:Name="MaxError" 
+                        <TextBox x:Name="MaxError"
+                                 PreviewTextInput="textBox_NumbersOnly_i"
                                  Grid.Row="4" />
                          <TextBox x:Name="R"
                                  Grid.Row="6" />

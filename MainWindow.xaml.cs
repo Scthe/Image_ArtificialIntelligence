@@ -59,8 +59,11 @@ namespace AI_4 {
 		private BitmapImage imgLeft; // TODO use Image.SourceRect ?
 		private BitmapImage imgRight;
 		private List<Tuple<int, int>> pairs;
+		// A1
 		private A1_NeighbourhoodCompactnessAnalysis a1_matcher = new A1_NeighbourhoodCompactnessAnalysis();
 		private List<Tuple<int, int>> neighbourhoodCompactnessPairs;
+		// A2
+		private A2_RANSAC a2_ransac = new A2_RANSAC();
 
 
 		public MainWindow() {
@@ -77,6 +80,10 @@ namespace AI_4 {
 
 			N.Text = a1_matcher.N.ToString();
 			MinPercentage.Value = a1_matcher.RequiredMinPercentage;
+			Iterations.Text = a2_ransac.IterCount.ToString();
+			MaxError.Text = a2_ransac.MaxError.ToString();
+			R.Text = a2_ransac.R.ToString();
+			r.Text = a2_ransac.r.ToString();
 
 			SetImage("sintel_render.png", IMAGE_PANEL.IP_LEFT);
 		}
@@ -86,6 +93,7 @@ namespace AI_4 {
 
 			RemoveKeypoints(target);
 			RemoveNeighbours();
+			neighbourhoodCompactnessPairs = null;
 
 			Image img = target == IMAGE_PANEL.IP_LEFT ? Image1 : Image2;
 			var path = dataDir + imgName;
@@ -404,15 +412,52 @@ namespace AI_4 {
 			}
 		}
 
-		private void RANSAC_Filter_Click(object sender, RoutedEventArgs e) {
-			if (dataLeft == null || dataRight == null) {
+		private void RANSAC_Click(object sender, RoutedEventArgs e) {
+			if (cts != null || dataLeft == null || dataRight == null) {
 				Console.WriteLine("[Warning] Could not analize images, data for either image left or image right was not read");
 				return;
 			}
-			//var ransac = new A2_RANSAC();
-			//var ransacMatrix = ransac.reduce(pairs, dataLeft, dataRight);
-			//displayRansacResult(ransacMatrix);
-			Console.WriteLine("[Info] RANSAC");
+
+			// read parameters
+			int iterationsVal;
+			double minPercentval = MinPercentage.Value;
+			double errVal, RVal, rVal;
+			bool ok = true;
+			ok &= int.TryParse(Iterations.Text, numberStyles, cultureInfo, out iterationsVal);
+			ok &= double.TryParse(MaxError.Text, numberStyles, cultureInfo, out errVal);
+			ok &= double.TryParse(R.Text, numberStyles, cultureInfo, out RVal);
+			ok &= double.TryParse(r.Text, numberStyles, cultureInfo, out rVal);
+			if (!ok) {
+				Console.WriteLine("[Error] Could not read one of the RANSAC parameters");
+				return;
+			}
+
+			// run
+			a2_ransac.IterCount = iterationsVal;
+			a2_ransac.MaxError = errVal;
+			a2_ransac.R = RVal;
+			a2_ransac.r = rVal;
+			Console.WriteLine(String.Format("[Info] Ransac {{ iters={0}; err={1}; R={2}; r={3} }}", iterationsVal, errVal, RVal, rVal));
+
+			List<Tuple<int, int>> _pairs_ = pairs;
+			if (RecalcPairs.IsChecked ?? false) {
+				if (neighbourhoodCompactnessPairs == null)
+					UpdateClosenessFilter_Click(null, null);
+				if (neighbourhoodCompactnessPairs != null)
+					_pairs_ = neighbourhoodCompactnessPairs;
+				else {
+					Console.WriteLine("[Error] Could not reuse compactness pairs");
+					return;
+				}
+			}
+
+			try {
+				//var ransacMatrix = ransac.reduce(pairs, dataLeft, dataRight);
+				//displayRansacResult(ransacMatrix);
+				Console.WriteLine("[Info] fin RANSAC");
+			} catch (Exception ee) {
+				Console.WriteLine("[Error] RANSAC error: " + ee.Message);
+			}
 		}
 
 		#endregion
