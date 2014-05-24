@@ -21,10 +21,7 @@ namespace AI_4.model {
 			var ks1 = img1.Keypoints;
 			var ks2 = img2.Keypoints;
 
-			//foreach (var pair in pairs) {
-			for (int i = 0; i < pairs.Count; i++) {
-				var pair = pairs[i];
-
+			foreach (var pair in pairs) {
 				var neighboursOf_1 = getClosestToKeyPoint(pair.Item1, ks1);
 				var neighboursOf_2 = getClosestToKeyPoint(pair.Item2, ks2);
 				int neighboursClose = 0;

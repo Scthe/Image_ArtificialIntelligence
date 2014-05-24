@@ -13,7 +13,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
-using System.Globalization;
 
 namespace AI_4 {
 
