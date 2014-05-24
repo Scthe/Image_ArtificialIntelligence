@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace AI_4.model {
 
@@ -51,11 +52,11 @@ namespace AI_4.model {
 		/// For each keypoint from image1 there is guarranted to be one.</returns>
 		private int[] findClose(List<KeyPoint> img1KPs, TraitsLookupMatrix img2lookup, int img2KPCount) {
 			int[] res = new int[img1KPs.Count];
-			int[] freqForOtherKeypoint = new int[img2KPCount];
 
-			List<int> tmpList = new List<int>(img2KPCount);
+			Parallel.For(0, img1KPs.Count, keyPoint1_i => {
+				int[] freqForOtherKeypoint = new int[img2KPCount];
+				List<int> tmpList = new List<int>(img2KPCount);
 
-			for (int keyPoint1_i = 0; keyPoint1_i < img1KPs.Count; keyPoint1_i++) {
 				KeyPoint keyPoint = img1KPs[keyPoint1_i];
 				int bestId = 0, bestIdFreq = 0;
 				for (int ii = 0; ii < img2KPCount; ii++)
@@ -64,7 +65,9 @@ namespace AI_4.model {
 				for (int i = 0; i < KeyPoint.TRAITS_COUNT; i++) {
 					// get closest keypoint from alien image in respect to the trait
 					int traitVal = keyPoint[i];
+
 					img2lookup.findClosest(i, traitVal, tmpList);
+
 					foreach (var otherImgClosestPointIDForTrait in tmpList) {
 						// look up how many times this alien keyPoint happened before
 						int currentFreq = freqForOtherKeypoint[otherImgClosestPointIDForTrait] + 1;
@@ -76,10 +79,8 @@ namespace AI_4.model {
 					}
 				}
 				res[keyPoint1_i] = bestId;
-			}
-
+			});
 			return res;
 		}
 	}
-
 }
