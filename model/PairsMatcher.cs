@@ -53,6 +53,7 @@ namespace AI_4.model {
 		private int[] findClose(List<KeyPoint> img1KPs, TraitsLookupMatrix img2lookup, int img2KPCount) {
 			int[] res = new int[img1KPs.Count];
 
+			// http://msdn.microsoft.com/en-us/library/dd460713(v=vs.110).aspx
 			Parallel.For(0, img1KPs.Count, keyPoint1_i => {
 				int[] freqForOtherKeypoint = new int[img2KPCount];
 				List<int> tmpList = new List<int>(img2KPCount);
