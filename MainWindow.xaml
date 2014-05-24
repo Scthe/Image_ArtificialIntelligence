@@ -27,7 +27,6 @@
         <!--canvas-->
         <Border BorderThickness="0 0 0 1"
                 BorderBrush="#FF424242"
-                Margin="0,0,0,5"
                 Grid.Column="1">
 
             <Canvas x:Name="DrawCanvas"
@@ -67,24 +66,64 @@
                 Grid.Column="0">
 
             <TreeView Background="#FF272727"
-                      BorderBrush="{x:Null}"
-                      VerticalContentAlignment="Top">
+                  VerticalContentAlignment="Top"
+                  BorderThickness="0">
+
+                <TreeView.Resources>
+                    <!--
+                        http://stackoverflow.com/questions/5499962/wpf-treeviewitem-background
+                    
+                        http://stackoverflow.com/questions/17814308/treeview-shows-blue-for-selected-item
+                        HighlightBrushKey - Background with focus.
+                        HighlightTextBrushKey - Foreground with focus.
+                        InactiveSelectionHighlightBrushKey - Background without focus.
+                        InactiveSelectionHighlightTextBrushKey - Foreground without focus.
+                    -->
+                    <Style TargetType="{x:Type TreeViewItem}">
+                        <Style.Resources>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"
+                                             Color="#FF61B3BB"
+                                             Opacity="0.0" />
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}"
+                                             Color="Black" />
+                        </Style.Resources>
+                    </Style>
+                    <Style  x:Key="ComboboxFix">
+                        <Style.Resources>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"
+                                             Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}" />
+                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}"
+                                             Color="White" />
+                        </Style.Resources>
+                    </Style>
+                    <Style TargetType="{x:Type Label}">
+                        <Setter Property="Foreground"
+                                Value="{StaticResource PropertiesColor}" />
+                    </Style>
+                    <Style TargetType="{x:Type TextBox}">
+                        <Setter Property="TextAlignment"
+                                Value="Right" />
+                        <Setter Property="Grid.ColumnSpan"
+                                Value="2" />
+                    </Style>
+                </TreeView.Resources>
 
                 <!---->
                 <!--General-->
                 <!---->
                 <TreeViewItem IsExpanded="True">
+                    
                     <TreeViewItem.Header>
                         <Border BorderThickness="0 0 0 1"
                                 BorderBrush="{DynamicResource PropertyGroupBorderColor}"
                                 Margin="0,10,0,0"
                                 Grid.Column="0"
                                 Width="124">
-                            <Label Content="General"
-                                   Foreground="{DynamicResource PropertiesColor}" />
+                            <Label Content="General" />
                         </Border>
                     </TreeViewItem.Header>
-                    <Grid Margin="-20,0,0,0">
+                    
+                    <Grid Margin="-20 0 0 0" Style="{DynamicResource ComboboxFix}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="100" />
                             <ColumnDefinition Width="*" />
@@ -100,66 +139,62 @@
                         </Grid.RowDefinitions>
 
                         <Label Content="Image left:"
-                               ToolTip="Show keypoints for left image"
-                               Foreground="{DynamicResource PropertiesColor}" />
+                               ToolTip="Show keypoints for left image" />
                         <Label Content="Image right:"
                                ToolTip="Show keypoints for right image"
-                               Foreground="{DynamicResource PropertiesColor}"
                                Grid.Row="2" />
 
-                <ComboBox x:Name="ImagePath1"
-                          Grid.Row="1"
-                          Grid.ColumnSpan="2"
-                          ItemsSource="{Binding ImagesList, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type l:MainWindow}}}"
-                          SelectedValuePath="Value"
-                          DisplayMemberPath="Description"
-                          SelectedValue="{Binding ComboBoxLeftSelected, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type l:MainWindow}}}" />
-                <ComboBox x:Name="ImagePath2"
-                          Grid.Row="3"
-                          Grid.ColumnSpan="2"
-                          ItemsSource="{Binding ImagesList, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type l:MainWindow}}}"
-                          SelectedValuePath="Value"
-                          DisplayMemberPath="Description"
-                          SelectedValue="{Binding ComboBoxRightSelected, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type l:MainWindow}}}" />
+                        <ComboBox x:Name="ImagePath1"
+                                  Grid.Row="1"
+                                  Grid.ColumnSpan="2"
+                                  ItemsSource="{Binding ImagesList, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type l:MainWindow}}}"
+                                  SelectedValuePath="Value"
+                                  DisplayMemberPath="Description"
+                                  SelectedValue="{Binding ComboBoxLeftSelected, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type l:MainWindow}}}" Style="{DynamicResource ComboboxFix}" />
+                        <ComboBox x:Name="ImagePath2"
+                                  Grid.Row="3"
+                                  Grid.ColumnSpan="2"
+                                  ItemsSource="{Binding ImagesList, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type l:MainWindow}}}"
+                                  SelectedValuePath="Value"
+                                  DisplayMemberPath="Description"
+                                  SelectedValue="{Binding ComboBoxRightSelected, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type l:MainWindow}}}" />
                         
-                <Label Content="Keypoints left"
-                       ToolTip="Show keypoints for left image"
-                       Grid.Row="4"
-                       Foreground="{DynamicResource PropertiesColor}" />
-                <Label Content="Keypoints right"
-                       ToolTip="Show keypoints for right image"
-                       Foreground="{DynamicResource PropertiesColor}"
-                       Grid.Row="5" />
-                <Label Content="Neighbours"
-                       ToolTip="Show keypoints for right image"
-                       Foreground="{DynamicResource PropertiesColor}"
-                       Grid.Row="6" />
+                        <Label Content="Keypoints left"
+                               ToolTip="Show keypoints for left image"
+                               Grid.Row="4"/>
+                        <Label Content="Keypoints right"
+                               ToolTip="Show keypoints for right image"
+                               Grid.Row="5" />
+                        <Label Content="Neighbours"
+                               ToolTip="Show keypoints for right image"
+                               Grid.Row="6" />
 
-                <CheckBox x:Name="KeypointsLeft"
-                          Grid.Column="1"
-                          Grid.Row="4"
-                          VerticalAlignment="Center"
-                          Checked="Keypoints_Changed"
-                          Unchecked="Keypoints_Changed"/>
-                <CheckBox x:Name="KeypointsRight"
-                          Grid.Column="1"
-                          Grid.Row="5"
-                          VerticalAlignment="Center"
-                          Checked="Keypoints_Changed"
-                          Unchecked="Keypoints_Changed"/>
-                <CheckBox x:Name="Neighbours"
-                          Grid.Column="1"
-                          Grid.Row="6"
-                          VerticalAlignment="Center" 
-                           Checked="Neighbours_Changed"
-                          Unchecked="Neighbours_Changed"/>
-    </Grid>
-    </TreeViewItem>
+                        <CheckBox x:Name="KeypointsLeft"
+                                  Grid.Column="1"
+                                  Grid.Row="4"
+                                  VerticalAlignment="Center"
+                                  Checked="Keypoints_Changed"
+                                  Unchecked="Keypoints_Changed"/>
+                        <CheckBox x:Name="KeypointsRight"
+                                  Grid.Column="1"
+                                  Grid.Row="5"
+                                  VerticalAlignment="Center"
+                                  Checked="Keypoints_Changed"
+                                  Unchecked="Keypoints_Changed"/>
+                        <CheckBox x:Name="Neighbours"
+                                  Grid.Column="1"
+                                  Grid.Row="6"
+                                  VerticalAlignment="Center" 
+                                   Checked="Neighbours_Changed"
+                                  Unchecked="Neighbours_Changed"/>
+                     </Grid>
+                </TreeViewItem>
 
-    <!---->
+                <!---->
                 <!--Closeness filter-->
                 <!---->
                 <TreeViewItem IsExpanded="False">
+                    
                     <TreeViewItem.Header>
                         <Border BorderThickness="0 0 0 1"
                                 BorderBrush="{DynamicResource PropertyGroupBorderColor}"
@@ -167,9 +202,10 @@
                                 Grid.Column="0"
                                 Width="124">
                             <Label Content="Closeness filter"
-                                   Foreground="{DynamicResource PropertiesColor}" Margin="0" />
+                                   Margin="0" />
                         </Border>
                     </TreeViewItem.Header>
+                    
                     <Grid Margin="-20,0,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="100" />
@@ -182,23 +218,30 @@
                             <RowDefinition Height="auto" />
                             <RowDefinition Height="auto" />
                         </Grid.RowDefinitions>
+                        
                         <Button Content="Update"
                                 Grid.Row="0"
                                 Height="30" />
+                        
                         <Label Content="N:"
                                ToolTip="Neighbourhood size"
-                               Foreground="{DynamicResource PropertiesColor}"
                                Grid.Row="1" />
                         <Label Content="Min percentage:"
                                ToolTip="Show keypoints for left image"
-                               Foreground="{DynamicResource PropertiesColor}"
                                Grid.Row="3" />
+                        
                         <TextBox x:Name="N"
-                                 Grid.Row="2" TextAlignment="Right"
-                                 Grid.ColumnSpan="2" />
+                                Grid.Row="2" />
                         <Slider x:Name="MinPercentage"
-                                 Grid.Row="4" 
-                                 Grid.ColumnSpan="2" Maximum="1" SmallChange="0.01" TickPlacement="TopLeft" Value="0.5" TickFrequency="2" LargeChange="0.1"/>
+                                Grid.Row="4" 
+                                Grid.ColumnSpan="2" 
+                                Maximum="1" 
+                                SmallChange="0.01"
+                                TickPlacement="TopLeft"
+                                Value="0.5" 
+                                TickFrequency="2"
+                                LargeChange="0.1"/>
+                        
                     </Grid>
                 </TreeViewItem>
 
@@ -206,16 +249,17 @@
                 <!--Ransac-->
                 <!---->
                 <TreeViewItem IsExpanded="False">
+                    
                     <TreeViewItem.Header>
                         <Border BorderThickness="0 0 0 1"
                                 BorderBrush="{DynamicResource PropertyGroupBorderColor}"
                                 Margin="0,10,0,5"
                                 Grid.Column="0"
                                 Width="124">
-                            <Label Content="RANSAC"
-                                   Foreground="{DynamicResource PropertiesColor}" />
+                            <Label Content="RANSAC" />
                         </Border>
                     </TreeViewItem.Header>
+                    
                     <Grid Margin="-20,0,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="100" />
@@ -231,37 +275,37 @@
                             <RowDefinition Height="auto" />
                             <RowDefinition Height="auto" />
                             <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
                         </Grid.RowDefinitions>
+                        
                         <Button Content="Update"
                                 Grid.Row="0"
                                 Height="30" />
+                        
                         <Label Content="Iterations:"
-                               Foreground="{DynamicResource PropertiesColor}"
                                Grid.Row="1" />
                         <Label Content="Max error:"
-                               Foreground="{DynamicResource PropertiesColor}"
                                Grid.Row="3" />
                         <Label Content="R:"
-                               Foreground="{DynamicResource PropertiesColor}"
                                Grid.Row="5" />
                         <Label Content="r:"
-                               Foreground="{DynamicResource PropertiesColor}"
                                Grid.Row="7" />
+                        <Label Content="Recalc pairs"
+                               Grid.Row="9" />
                         
+                        <TextBox x:Name="Iterations"
+                                 Grid.Row="2" />
+                        <TextBox x:Name="MaxError" 
+                                 Grid.Row="4" />
+                         <TextBox x:Name="R"
+                                 Grid.Row="6" />
+                         <TextBox x:Name="r"
+                                 Grid.Row="8" />
+                        <CheckBox x:Name="RecalcPairs"
+                                Grid.Column="1"
+                                Grid.Row="9"
+                                VerticalAlignment="Center" />
                         
-                        <TextBox x:Name="Iterations" TextAlignment="Right"
-                                 Grid.Row="2"
-                                 Grid.ColumnSpan="2" />
-                        <TextBox x:Name="MaxError" TextAlignment="Right"
-                                 Grid.Row="4"
-                                 Grid.ColumnSpan="2" />
-                         <TextBox x:Name="R" TextAlignment="Right"
-                                 Grid.Row="6"
-                                 Grid.ColumnSpan="2" />
-                         <TextBox x:Name="r" TextAlignment="Right"
-                                 Grid.Row="8"
-                                 Grid.ColumnSpan="2" />
-
                     </Grid>
                 </TreeViewItem>
 
