@@ -12,6 +12,7 @@ using System.Globalization;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace AI_4 {
 
@@ -36,6 +37,8 @@ namespace AI_4 {
 	public partial class MainWindow : Window {
 
 		private enum IMAGE_PANEL { IP_LEFT, IP_RIGHT }
+
+		private CancellationTokenSource cts;
 
 		public IEnumerable<ValueDescription> ImagesList {
 			get {
@@ -71,8 +74,8 @@ namespace AI_4 {
 		private void SetImage(string imgName, IMAGE_PANEL target) {
 			//http://stackoverflow.com/questions/12866758/placing-bitmap-in-canvas-in-c-sharp
 
-			removeKeypoints(target);
-			removeNeighbours();
+			RemoveKeypoints(target);
+			RemoveNeighbours();
 
 			Image img = target == IMAGE_PANEL.IP_LEFT ? Image1 : Image2;
 			var path = dataDir + imgName;
@@ -99,41 +102,52 @@ namespace AI_4 {
 		private async void LoadImgData(string fullImagePath, IMAGE_PANEL target) {
 			// http://blog.stephencleary.com/2012/02/async-and-await.html
 
-			if (target == IMAGE_PANEL.IP_LEFT) dataLeft = null;
-			else dataRight = null;
+			if (cts != null) {
+				cts.Cancel();
+			}
+			cts = new CancellationTokenSource();
+			try {
+				pairs = null;
+				if (target == IMAGE_PANEL.IP_LEFT) dataLeft = null;
+				else dataRight = null;
 
-			var path = fullImagePath + ".haraff.sift";
-			bool ok = false;
-			if (File.Exists(path)) {
-				try {
-					SiftLoader l = new SiftLoader();
-					await Task.Run(() => l.load(path));
-					ImageData imgData = l.Result;
+				var path = fullImagePath + ".haraff.sift";
+				bool ok = false;
+				if (File.Exists(path)) {
+					try {
+						SiftLoader l = new SiftLoader();
+						await Task.Run(() => l.load(path));
+						ImageData imgData = l.Result;
 
-					if (target == IMAGE_PANEL.IP_LEFT) dataLeft = imgData;
-					else dataRight = imgData;
+						if (target == IMAGE_PANEL.IP_LEFT) dataLeft = imgData;
+						else dataRight = imgData;
 
-					ok = true;
-					Console.WriteLine("[Info] HARAFF SIFT parse success: " + imgData.Keypoints.Count + " keypoints");
-				} catch (Exception e) {
-					Console.WriteLine("[Error] Loading HARAFF SIFT error: " + e.Message + "\n\tFile: '" + path + "'");
+						ok = true;
+						Console.WriteLine("[Info] HARAFF SIFT parse success: " + imgData.Keypoints.Count + " keypoints");
+					} catch (Exception e) {
+						Console.WriteLine("[Error] Loading HARAFF SIFT error: " + e.Message + "\n\tFile: '" + path + "'");
+					}
+
+				} else {
+					Console.WriteLine("[Error] Could not find HARAFF SIFT \n\tSearched in: '" + path + "'");
 				}
 
-			} else {
-				Console.WriteLine("[Error] Could not find HARAFF SIFT \n\tSearched in: '" + path + "'");
-			}
+				cts.Token.ThrowIfCancellationRequested();
 
-			// if everything went ok - update neighbours
-			if (ok) {
-				await Task.Run(() => ReloadPairs());
+				// if everything went ok - update neighbours
+				if (ok) {
+					await Task.Run(() => ReloadPairs(cts.Token));
+				}
+			} catch (OperationCanceledException) {
 			}
+			cts = null;
 		}
 
-		private void ReloadPairs() {
+		private void ReloadPairs(CancellationToken ct) {
 			if (dataLeft != null && dataRight != null) {
 				var matcher = new NeighbourPointsMatcher();
 				try {
-					pairs = matcher.match(dataLeft, dataRight);
+					pairs = matcher.match(dataLeft, dataRight, ct);
 					Console.WriteLine("[Info] Found " + pairs.Count + " pairs");
 				} catch (Exception ex) {
 					Console.WriteLine("[Error] NeighbourPointsMatcher: " + ex.Message);
@@ -150,7 +164,7 @@ namespace AI_4 {
 		/// Getting Image view size does not tell us about real image size.
 		/// f.e. with HorizontalAlignment: left the right side of the Image view could be empty
 		/// </summary>
-		private static void getRealImageSize(Image imgView, BitmapImage img, out double outW, out double outH) {
+		private static void GetRealImageSize(Image imgView, BitmapImage img, out double outW, out double outH) {
 			double w = imgView.Width;
 			double h = imgView.Height;
 			double imgW = img.PixelWidth; // http://stackoverflow.com/questions/11571365/how-to-get-the-width-and-height-of-a-bitmapimage-in-metro
@@ -172,7 +186,7 @@ namespace AI_4 {
 		/// <summary>
 		/// 
 		/// </summary>
-		private void getDrawTransformation(IMAGE_PANEL target,
+		private void GetDrawTransformation(IMAGE_PANEL target,
 			out double outBaseX, out double outBaseY,
 			out double outScaleX, out double outScaleY) {
 
@@ -184,7 +198,7 @@ namespace AI_4 {
 			// read image view values
 			Image imgView = target == IMAGE_PANEL.IP_LEFT ? Image1 : Image2;
 			double w, h;
-			getRealImageSize(imgView, img, out w, out h);
+			GetRealImageSize(imgView, img, out w, out h);
 			outBaseX = (double)imgView.GetValue(Canvas.LeftProperty);
 			outBaseY = (double)imgView.GetValue(Canvas.TopProperty); // should be 0 anyway
 			//Console.WriteLine("[Debug] View " + target.ToString() + String.Format(" x:{0}; y:{1}; w:{2}; h:{3}", outBaseX, outBaseY, w, h));
@@ -204,12 +218,15 @@ namespace AI_4 {
 
 		#region display data on the images
 
-		private void showKeypoints(IMAGE_PANEL target) {
+		private void ShowKeypoints(IMAGE_PANEL target) {
 			var data = target == IMAGE_PANEL.IP_LEFT ? dataLeft : dataRight;
-
+			if (cts != null || data == null) {
+				Console.WriteLine("[Error] Could not display keypoints - data not valid / running async");
+				return;
+			}
 			double baseX, baseY;
 			double scaleX, scaleY;
-			getDrawTransformation(target, out baseX, out baseY, out scaleX, out scaleY);
+			GetDrawTransformation(target, out baseX, out baseY, out scaleX, out scaleY);
 
 			// draw
 			const double radius = 1;
@@ -232,9 +249,11 @@ namespace AI_4 {
 			}
 		}
 
-		private void showNeighbourConnectionLines() {
-			if (pairs == null)
-				Console.WriteLine("[Error] Could not display neighbours - list is not valid");
+		private void ShowNeighbourConnectionLines() {
+			if (cts != null || pairs == null) {
+				Console.WriteLine("[Error] Could not display neighbours - list is not valid / running async");
+				return;
+			}
 
 			Console.WriteLine("[Debug] Displaying " + pairs.Count + " pairs");
 			var kp1 = dataLeft.Keypoints;
@@ -243,8 +262,8 @@ namespace AI_4 {
 			// get transformation set
 			double baseX_1, baseY_1, baseX_2, baseY_2;
 			double scaleX_1, scaleY_1, scaleX_2, scaleY_2;
-			getDrawTransformation(IMAGE_PANEL.IP_LEFT, out baseX_1, out baseY_1, out scaleX_1, out scaleY_1);
-			getDrawTransformation(IMAGE_PANEL.IP_RIGHT, out baseX_2, out baseY_2, out scaleX_2, out scaleY_2);
+			GetDrawTransformation(IMAGE_PANEL.IP_LEFT, out baseX_1, out baseY_1, out scaleX_1, out scaleY_1);
+			GetDrawTransformation(IMAGE_PANEL.IP_RIGHT, out baseX_2, out baseY_2, out scaleX_2, out scaleY_2);
 
 			foreach (var idPair in pairs) {
 				//for (int i = 0; i < 5; i++) {
@@ -266,7 +285,7 @@ namespace AI_4 {
 			}
 		}
 
-		private void removeNeighbours() {
+		private void RemoveNeighbours() {
 			List<UIElement> itemstoremove = new List<UIElement>();
 			foreach (UIElement ui in DrawCanvas.Children) {
 				if (ui.Uid.StartsWith("Line")) {
@@ -278,7 +297,7 @@ namespace AI_4 {
 			}
 		}
 
-		private void removeKeypoints(IMAGE_PANEL target) {
+		private void RemoveKeypoints(IMAGE_PANEL target) {
 			List<UIElement> itemstoremove = new List<UIElement>();
 			foreach (UIElement ui in DrawCanvas.Children) {
 				if (ui.Uid.StartsWith("kp") && ui.Uid.EndsWith(target.ToString())) {
@@ -327,20 +346,20 @@ namespace AI_4 {
 			var target = chBox.Name.Equals(KeypointsLeft.Name) ? IMAGE_PANEL.IP_LEFT : IMAGE_PANEL.IP_RIGHT;
 
 			if (chBox.IsChecked ?? false) {
-				showKeypoints(target);
+				ShowKeypoints(target);
 			} else {
 				// remove all keypoints
-				removeKeypoints(target);
+				RemoveKeypoints(target);
 			}
 		}
 
 		private void Neighbours_Changed(object sender, RoutedEventArgs e) {
 			var chBox = sender as CheckBox;
 			if (chBox.IsChecked ?? false) {
-				showNeighbourConnectionLines();
+				ShowNeighbourConnectionLines();
 			} else {
 				// remove lines
-				removeNeighbours();
+				RemoveNeighbours();
 			}
 		}
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace AI_4.model {
 
@@ -10,7 +11,7 @@ namespace AI_4.model {
 		/// that create the 'closest neighbour list'
 		/// </summary>
 		/// <returns>List of tuples, each tuple consists of 2 indices</returns>
-		public List<Tuple<int, int>> match(ImageData imgData1, ImageData imgData2) {
+		public List<Tuple<int, int>> match(ImageData imgData1, ImageData imgData2, CancellationToken ct) {
 
 			var kps1 = imgData1.Keypoints;
 			var kps2 = imgData2.Keypoints;
@@ -22,10 +23,12 @@ namespace AI_4.model {
 			var neighboursForPointsOnImg1 = findClose(kps1, lookup2);
 			var neighboursForPointsOnImg2 = findClose(kps2, lookup1);
 			foreach (int idB in neighboursForPointsOnImg1) {
+				ct.ThrowIfCancellationRequested();
+
 				int idA = neighboursForPointsOnImg2[idB];
 				if (neighboursForPointsOnImg1[idA] == idB)
 					// if idA points to idB and idB points to idA
-					res.Add(new Tuple<int, int>(idA, idB)); 
+					res.Add(new Tuple<int, int>(idA, idB));
 			}
 
 			return res;
