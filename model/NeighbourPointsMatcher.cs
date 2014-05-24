@@ -11,8 +11,7 @@ namespace AI_4.model {
 		/// that create the 'closest neighbour list'
 		/// </summary>
 		/// <returns>List of tuples, each tuple consists of 2 indices</returns>
-		public List<Tuple<int, int>> match(ImageData imgData1, ImageData imgData2, CancellationToken ct) {
-
+		public List<Tuple<int, int>> match(ImageData imgData1, ImageData imgData2, CancellationTokenSource cts) {
 			var kps1 = imgData1.Keypoints;
 			var kps2 = imgData2.Keypoints;
 			var lookup1 = imgData1.LookupMatrix;
@@ -23,7 +22,8 @@ namespace AI_4.model {
 			var neighboursForPointsOnImg1 = findClose(kps1, lookup2);
 			var neighboursForPointsOnImg2 = findClose(kps2, lookup1);
 			foreach (int idB in neighboursForPointsOnImg1) {
-				ct.ThrowIfCancellationRequested();
+				if (cts != null)
+					cts.Token.ThrowIfCancellationRequested();
 
 				int idA = neighboursForPointsOnImg2[idB];
 				if (neighboursForPointsOnImg1[idA] == idB)
@@ -44,7 +44,7 @@ namespace AI_4.model {
 		private int[] findClose(List<KeyPoint> img1KPs, TraitsLookupMatrix img2lookup) {
 			int[] res = new int[img1KPs.Count];
 			var freqForOtherKeypoint = new Dictionary<int, int>(); // should have used heap
-			
+
 			List<int> tmpList = new List<int>(img1KPs.Capacity); // We do not have img2 capacity, we wil use img1 capacity instead.. IT IS NOT A CORRECT NUMBER ! still better the default..
 
 			for (int keyPoint1_i = 0; keyPoint1_i < img1KPs.Count; keyPoint1_i++) {

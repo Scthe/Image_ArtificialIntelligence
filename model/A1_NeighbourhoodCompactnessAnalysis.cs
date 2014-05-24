@@ -7,8 +7,8 @@ namespace AI_4.model {
 	public class A1_NeighbourhoodCompactnessAnalysis {
 
 		//private const float LIST_ELEMENTS_TO_CHECK = 0.3f;
-		public float RequiredMinPercentage { set; private get; }
-		public int N { set; private get; } // neighbourhood size
+		public float RequiredMinPercentage { set; get; }
+		public int N { set; get; } // neighbourhood size
 
 		public A1_NeighbourhoodCompactnessAnalysis() {
 			RequiredMinPercentage = 10f;

@@ -13,6 +13,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Globalization;
 
 namespace AI_4 {
 
@@ -36,6 +37,9 @@ namespace AI_4 {
 	/// </summary>
 	public partial class MainWindow : Window {
 
+		readonly public static NumberStyles numberStyles = NumberStyles.Number;
+		readonly public static CultureInfo cultureInfo = CultureInfo.InvariantCulture;
+
 		private enum IMAGE_PANEL { IP_LEFT, IP_RIGHT }
 
 		private CancellationTokenSource cts;
@@ -54,6 +58,9 @@ namespace AI_4 {
 		private BitmapImage imgLeft; // TODO use Image.SourceRect ?
 		private BitmapImage imgRight;
 		private List<Tuple<int, int>> pairs;
+		private A1_NeighbourhoodCompactnessAnalysis a1_matcher = new A1_NeighbourhoodCompactnessAnalysis();
+		private List<Tuple<int, int>> neighbourhoodCompactnessPairs;
+
 
 		public MainWindow() {
 			InitializeComponent();
@@ -67,8 +74,10 @@ namespace AI_4 {
 			this.Left = 0;// desktopWorkingArea.Right - this.Width;
 			this.Top = desktopWorkingArea.Bottom - this.Height;
 
+			N.Text = a1_matcher.N.ToString();
+			MinPercentage.Value = a1_matcher.RequiredMinPercentage;
+
 			SetImage("sintel_render.png", IMAGE_PANEL.IP_LEFT);
-			//setImage("15after.png", IMAGE_PANEL.IP_RIGHT);
 		}
 
 		private void SetImage(string imgName, IMAGE_PANEL target) {
@@ -99,7 +108,7 @@ namespace AI_4 {
 
 		#region controller
 
-		private async void LoadImgData(string fullImagePath, IMAGE_PANEL target) {
+		private async Task LoadImgData(string fullImagePath, IMAGE_PANEL target) {
 			// http://blog.stephencleary.com/2012/02/async-and-await.html
 
 			if (cts != null) {
@@ -113,15 +122,12 @@ namespace AI_4 {
 
 				var path = fullImagePath + ".haraff.sift";
 				bool ok = false;
+				ImageData imgData = null;
 				if (File.Exists(path)) {
 					try {
 						SiftLoader l = new SiftLoader();
 						await Task.Run(() => l.load(path));
-						ImageData imgData = l.Result;
-
-						if (target == IMAGE_PANEL.IP_LEFT) dataLeft = imgData;
-						else dataRight = imgData;
-
+						imgData = l.Result;
 						ok = true;
 						Console.WriteLine("[Info] HARAFF SIFT parse success: " + imgData.Keypoints.Count + " keypoints");
 					} catch (Exception e) {
@@ -137,18 +143,21 @@ namespace AI_4 {
 
 				// if everything went ok - update neighbours
 				if (ok) {
-					await Task.Run(() => ReloadPairs(cts.Token));
+					if (target == IMAGE_PANEL.IP_LEFT) dataLeft = imgData;
+					else dataRight = imgData;
+
+					await Task.Run(() => ReloadPairs(cts));
 				}
 			} catch (OperationCanceledException) {
 			}
 			cts = null;
 		}
 
-		private void ReloadPairs(CancellationToken ct) {
+		private void ReloadPairs(CancellationTokenSource cts) {
 			if (dataLeft != null && dataRight != null) {
 				var matcher = new NeighbourPointsMatcher();
 				try {
-					pairs = matcher.match(dataLeft, dataRight, ct);
+					pairs = matcher.match(dataLeft, dataRight, cts);
 					Console.WriteLine("[Info] Found " + pairs.Count + " pairs");
 				} catch (Exception ex) {
 					Console.WriteLine("[Error] NeighbourPointsMatcher: " + ex.Message);
@@ -250,13 +259,13 @@ namespace AI_4 {
 			}
 		}
 
-		private void ShowNeighbourConnectionLines() {
+		private void ShowNeighbourConnectionLines(List<Tuple<int, int>> pairs) {
 			if (cts != null || pairs == null) {
 				Console.WriteLine("[Error] Could not display neighbours - list is not valid / running async");
 				return;
 			}
 
-			Console.WriteLine("[Debug] Displaying " + pairs.Count + " pairs");
+			//Console.WriteLine("[Debug] Displaying " + pairs.Count + " pairs");
 			var kp1 = dataLeft.Keypoints;
 			var kp2 = dataRight.Keypoints;
 
@@ -267,9 +276,6 @@ namespace AI_4 {
 			GetDrawTransformation(IMAGE_PANEL.IP_RIGHT, out baseX_2, out baseY_2, out scaleX_2, out scaleY_2);
 
 			foreach (var idPair in pairs) {
-				//for (int i = 0; i < 5; i++) {
-				//var idPair = pairs[i];
-
 				var idA = idPair.Item1;
 				var idB = idPair.Item2;
 				var kpA = kp1[idA];
@@ -357,48 +363,40 @@ namespace AI_4 {
 		private void Neighbours_Changed(object sender, RoutedEventArgs e) {
 			var chBox = sender as CheckBox;
 			if (chBox.IsChecked ?? false) {
-				ShowNeighbourConnectionLines();
+				ShowNeighbourConnectionLines(pairs);
 			} else {
 				// remove lines
 				RemoveNeighbours();
 			}
 		}
 
-
-		/* if (dataLeft != null && dataRight != null) {
-				var matcher = new NeighbourPointsMatcher();
-				var ai1 = new A1_NeighbourhoodCompactnessAnalysis();
-				var ransac = new A2_RANSAC();
-
-				try {
-					pairs = matcher.match(dataLeft, dataRight);
-					Console.WriteLine("[Info] Found " + pairs.Count + " pairs");
-					//showNeighbourConnectionLines(pairs);
-
-					//var pairs2 =ai1.reduce(pairs, dataLeft, dataRight);
-					//Console.WriteLine("[Info] Reduced to " + pairs2.Count + " pairs");
-					//showNeighbourConnectionLines(pairs2);
-
-					//var ransacMatrix = ransac.reduce(pairs, dataLeft, dataRight);
-					//displayRansacResult(ransacMatrix);
-
-
-				} catch (Exception ex) {
-					Console.WriteLine("[Error] NeighbourPointsMatcher: " + ex.Message);
-				}
-			} else {
-				Console.WriteLine("[Error] Could not analize images, data for either image left or image right was not read");
-			}*/
 		private void UpdateClosenessFilter_Click(object sender, RoutedEventArgs e) {
-			if (dataLeft == null || dataRight == null) {
+			if (cts != null || dataLeft == null || dataRight == null) {
 				Console.WriteLine("[Warning] Could not analize images, data for either image left or image right was not read");
 				return;
 			}
 
 			// read parameters
+			int Nval;
+			if (!int.TryParse(N.Text, numberStyles, cultureInfo, out Nval)) {
+				Console.WriteLine("[Error] Could not read N value '" + N.Text + "' as int");
+				return;
+			}
+			double minPercentval = MinPercentage.Value;
+			RemoveNeighbours();
 
+			// run
+			a1_matcher.N = Nval;
+			a1_matcher.RequiredMinPercentage = (float)minPercentval;
+			Console.WriteLine(String.Format("[Info] Closeness filter {{ N={0}; MinPercent={1} }}", Nval, minPercentval));
 
-			Console.WriteLine(String.Format("[Info] Close"));
+			try {
+				neighbourhoodCompactnessPairs = a1_matcher.reduce(pairs, dataLeft, dataRight);
+				ShowNeighbourConnectionLines(neighbourhoodCompactnessPairs);
+				Console.WriteLine("[Info] Closeness filter found " + neighbourhoodCompactnessPairs.Count + "  / " + pairs.Count + "pairs");
+			} catch (Exception ee) {
+				Console.WriteLine("[Error] Closeness filter error: " + ee.Message);
+			}
 		}
 
 		private void RANSAC_Filter_Click(object sender, RoutedEventArgs e) {
@@ -406,11 +404,18 @@ namespace AI_4 {
 				Console.WriteLine("[Warning] Could not analize images, data for either image left or image right was not read");
 				return;
 			}
-			Console.WriteLine(String.Format("[Info] RANSAC"));
+			//var ransac = new A2_RANSAC();
+			//var ransacMatrix = ransac.reduce(pairs, dataLeft, dataRight);
+			//displayRansacResult(ransacMatrix);
+			Console.WriteLine("[Info] RANSAC");
 		}
 
 		#endregion
 
+		private void textBox_NumbersOnly_i(object sender, System.Windows.Input.TextCompositionEventArgs e) {
+			if (!Char.IsDigit(e.Text[0]))
+				e.Handled = true;
+		}
 	}
 
 

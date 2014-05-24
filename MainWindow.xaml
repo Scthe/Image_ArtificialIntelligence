@@ -232,16 +232,16 @@
                                Grid.Row="3" />
                         
                         <TextBox x:Name="N"
+                                 PreviewTextInput="textBox_NumbersOnly_i"
                                 Grid.Row="2" />
                         <Slider x:Name="MinPercentage"
                                 Grid.Row="4" 
                                 Grid.ColumnSpan="2" 
-                                Maximum="1" 
-                                SmallChange="0.01"
-                                TickPlacement="TopLeft"
-                                Value="0.5" 
-                                TickFrequency="2"
-                                LargeChange="0.1"/>
+                                Minimum="1"
+                                Maximum="100" 
+                                SmallChange="1"
+                                Value="50" 
+                                LargeChange="10"/>
                         
                     </Grid>
                 </TreeViewItem>
