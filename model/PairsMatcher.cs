@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace AI_4.model {
 
-	public class NeighbourPointsMatcher {
+	public class PairsMatcher {
 
 		/// <summary>
 		/// Takes data generated from 2 images and returns list of indices

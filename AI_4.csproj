@@ -74,8 +74,7 @@
     <Compile Include="model\A1_NeighbourhoodCompactnessAnalysis.cs" />
     <Compile Include="model\A2_RANSAC.cs" />
     <Compile Include="model\ImageData.cs" />
-    <Compile Include="model\KeyPoint.cs" />
-    <Compile Include="model\NeighbourPointsMatcher.cs" />
+    <Compile Include="model\PairsMatcher.cs" />
     <Compile Include="model\SiftLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>

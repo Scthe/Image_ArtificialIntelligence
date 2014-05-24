@@ -160,7 +160,7 @@ namespace AI_4 {
 
 		private void ReloadPairs(CancellationTokenSource cts) {
 			if (dataLeft != null && dataRight != null) {
-				var matcher = new NeighbourPointsMatcher();
+				var matcher = new PairsMatcher();
 				try {
 					pairs = matcher.match(dataLeft, dataRight, cts);
 					Console.WriteLine("[Info] Found " + pairs.Count + " pairs");
